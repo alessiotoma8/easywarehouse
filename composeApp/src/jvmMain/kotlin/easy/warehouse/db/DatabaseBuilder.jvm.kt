@@ -6,7 +6,7 @@ import easy.warehouse.product.AppDatabase
 import java.io.File
 
 actual fun getDatabaseBuilder(): RoomDatabase.Builder<AppDatabase> {
-    val dbFile = File(getAppDataDir("EasyWarehouse"), "easy_warehouse.db")
+    val dbFile = File(getAppDataDir("EasyWarehouse1"), "easy_warehouse.db")
     return Room.databaseBuilder<AppDatabase>(
         name = dbFile.absolutePath
     )
