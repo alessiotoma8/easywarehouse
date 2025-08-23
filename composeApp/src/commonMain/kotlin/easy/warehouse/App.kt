@@ -4,6 +4,7 @@ import LoginScreen
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -20,8 +21,6 @@ import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.AddShoppingCart
-import androidx.compose.material.icons.filled.RemoveShoppingCart
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -31,6 +30,7 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -53,11 +53,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.input.key.Key
-import androidx.compose.ui.input.key.KeyEventType
-import androidx.compose.ui.input.key.key
-import androidx.compose.ui.input.key.onPreviewKeyEvent
-import androidx.compose.ui.input.key.type
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.times
@@ -72,6 +67,7 @@ import easy.warehouse.employee.EmployeeVm
 import easy.warehouse.product.PendingChange
 import easy.warehouse.product.ProductEntity
 import easy.warehouse.product.ProductVm
+import easy.warehouse.product.Utility
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.ui.tooling.preview.Preview
 
@@ -216,10 +212,13 @@ fun WarehouseScreen() {
 
                 item(span = { GridItemSpan(this.maxLineSpan) }) {
                     val searchQuery by productVm.searchQuery.collectAsStateWithLifecycle("")
-                    SearchBar(
-                        query = searchQuery,
-                        onQueryChange = { productVm.updateSearch(it) }
-                    )
+                    Column {
+                        SearchBar(
+                            query = searchQuery,
+                            onQueryChange = { productVm.updateSearch(it) }
+                        )
+                        ProductFilterChips(productVm)
+                    }
                 }
 
                 // Griglia di prodotti
@@ -265,8 +264,16 @@ fun ProductItem(product: ProductEntity, productVm: ProductVm) {
             Column(
                 modifier = Modifier.weight(1f)
             ) {
-                Text(product.title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-                Text(product.content, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold)
+                Text(
+                    product.title,
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold
+                )
+                Text(
+                    product.content,
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = FontWeight.SemiBold
+                )
                 Text(product.utility.displayName, style = MaterialTheme.typography.bodySmall)
             }
 
@@ -508,4 +515,35 @@ fun SearchBar(
         },
         shape = RoundedCornerShape(12.dp)
     )
+
+
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun ProductFilterChips(
+    productVm: ProductVm,
+    modifier: Modifier = Modifier,
+) {
+    val selectedUtilities by productVm.selectedUtility.collectAsStateWithLifecycle()
+    val allUtilities = Utility.entries
+
+    FlowRow(
+        modifier = modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        FilterChip(
+            selected = selectedUtilities == null,
+            onClick = { productVm.toggleUtilityFilter(null) },
+            label = { Text("Tutti") }
+        )
+        allUtilities.forEach { utility ->
+            val isSelected =  selectedUtilities == utility
+            FilterChip(
+                selected = isSelected,
+                onClick = { productVm.toggleUtilityFilter(utility) },
+                label = { Text(utility.displayName) }
+            )
+        }
+    }
 }

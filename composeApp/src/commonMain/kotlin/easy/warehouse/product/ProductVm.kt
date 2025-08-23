@@ -33,8 +33,11 @@ class ProductVm : ViewModel() {
     private val _searchQuery = MutableStateFlow("")
     val searchQuery = _searchQuery.asStateFlow()
 
+    private val _selectedUtility = MutableStateFlow<Utility?>(null)
+    val selectedUtility = _selectedUtility.asStateFlow()
+
     val displayProducts: StateFlow<List<ProductEntity>> =
-        combine(products, pendingChanges, searchQuery) { dbProducts, changes, query ->
+        combine(products, pendingChanges, searchQuery,selectedUtility) { dbProducts, changes, query, utilityQuery ->
             val updatedProducts = dbProducts.map { product ->
                 val pendingChange = changes[product.id]
                 if (pendingChange != null) {
@@ -44,11 +47,17 @@ class ProductVm : ViewModel() {
                 }
             }
 
-            if (query.isBlank()) {
-                updatedProducts
-            } else {
-                updatedProducts.filter { it.title.contains(query, ignoreCase = true) }
+            val queryProducts = run {
+                if (query.isBlank()) {
+                    updatedProducts
+                } else {
+                    updatedProducts.filter { it.title.contains(query, ignoreCase = true) }
+                }
             }
+            utilityQuery?.let{utility->
+                queryProducts.filter { it.utility == utility }
+            }?:queryProducts
+
         }.stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000),
@@ -117,6 +126,10 @@ class ProductVm : ViewModel() {
         val currentChanges = _pendingChanges.value.toMutableMap()
         currentChanges.remove(id)
         _pendingChanges.value = currentChanges
+    }
+
+    fun toggleUtilityFilter(utility:Utility?){
+        _selectedUtility.value = utility
     }
 
 }
