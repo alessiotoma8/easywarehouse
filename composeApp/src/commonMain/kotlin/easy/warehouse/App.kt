@@ -117,7 +117,16 @@ fun App() {
         }
     }
 }
-
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun WAppBar(text:String){
+    TopAppBar(
+        title = { Text(text, fontWeight = FontWeight.ExtraBold, color = MaterialTheme.colorScheme.onPrimaryContainer) },
+        colors = androidx.compose.material3.TopAppBarDefaults.topAppBarColors(
+            containerColor = MaterialTheme.colorScheme.primaryContainer
+        )
+    )
+}
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun WarehouseScreen() {
@@ -138,12 +147,7 @@ fun WarehouseScreen() {
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = { Text("Magazzino", fontWeight = FontWeight.ExtraBold, color = MaterialTheme.colorScheme.onPrimaryContainer) },
-                colors = androidx.compose.material3.TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.primaryContainer
-                )
-            )
+            WAppBar("Magazzino")
         },
         snackbarHost = { SnackbarHost(snackbarHostState) }
     ) { innerPadding ->

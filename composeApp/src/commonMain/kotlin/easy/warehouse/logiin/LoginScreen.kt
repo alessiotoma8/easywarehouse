@@ -22,6 +22,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
+import easy.warehouse.WAppBar
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -31,9 +32,7 @@ fun LoginScreen(authAction: (String,String) -> Unit) {
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = { Text("Login") }
-            )
+            WAppBar("Login")
         }
     ) { innerPadding ->
         Column(

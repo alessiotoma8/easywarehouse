@@ -2,6 +2,7 @@ package easy.warehouse.admin
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -42,7 +43,10 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import easy.warehouse.DarkGreen
+import easy.warehouse.DarkRed
 import easy.warehouse.GenericExposedDropdownMenu
+import easy.warehouse.WAppBar
 import easy.warehouse.destination.VehicleDestinationEntity
 import easy.warehouse.destination.VehicleVm
 import easy.warehouse.employee.EmployeeEntity
@@ -59,14 +63,17 @@ data class TabAction(
     val color: Color,
 )
 
+val Green2 = Color(0xFF4CAF50)
+val Red2 = Color(0xFFF44336)
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 @Preview
 fun AdminScreen() {
     var selectedTabActionIndex by remember { mutableStateOf(0) }
     val actions = listOf(
-        TabAction("Aggiungi", Icons.Default.AddCircle, Color(0xFF4CAF50)),
-        TabAction("Rimuovi", Icons.Default.RemoveCircle, Color(0xFFF44336))
+        TabAction("Aggiungi", Icons.Default.AddCircle, Green2),
+        TabAction("Rimuovi", Icons.Default.RemoveCircle, Red2)
     )
 
     var selectedTabIndex by remember { mutableStateOf(0) }
@@ -76,9 +83,7 @@ fun AdminScreen() {
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = { Text("Pannello di Amministrazione") }
-            )
+            WAppBar("Pannello di Amministrazione")
         },
         snackbarHost = { SnackbarHost(snackbarHostState) }
     ) { innerPadding ->
@@ -87,6 +92,39 @@ fun AdminScreen() {
                 .padding(innerPadding)
                 .fillMaxSize()
         ) {
+            TabRow(selectedTabIndex = selectedTabIndex) {
+                tabs.forEachIndexed { index, title ->
+                    Tab(
+                        selected = selectedTabIndex == index,
+                        onClick = { selectedTabIndex = index },
+                        text = { Text(title) }
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            Box(
+                modifier = Modifier.weight(1f)
+            ) {
+                when (selectedTabActionIndex) {
+                    0 -> {
+                        when (selectedTabIndex) {
+                            0 -> UserAddSection(snackbarHostState)
+                            1 -> VehicleAddSection(snackbarHostState)
+                            2 -> ProductAddSection(snackbarHostState)
+                        }
+                    }
+
+                    1 -> {
+                        when (selectedTabIndex) {
+                            0 -> UserRemoveSection(snackbarHostState)
+                            1 -> VehicleRemoveSection(snackbarHostState)
+                            2 -> ProductRemoveSection(snackbarHostState)
+                        }
+                    }
+                }
+            }
             TabRow(
                 selectedTabIndex = selectedTabActionIndex,
                 containerColor = MaterialTheme.colorScheme.surfaceVariant
@@ -107,35 +145,6 @@ fun AdminScreen() {
                             Icon(imageVector = tabAction.icon, contentDescription = tabAction.title)
                             Text(text = tabAction.title)
                         }
-                    }
-                }
-            }
-            TabRow(selectedTabIndex = selectedTabIndex) {
-                tabs.forEachIndexed { index, title ->
-                    Tab(
-                        selected = selectedTabIndex == index,
-                        onClick = { selectedTabIndex = index },
-                        text = { Text(title) }
-                    )
-                }
-            }
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            when (selectedTabActionIndex) {
-                0 -> {
-                    when (selectedTabIndex) {
-                        0 -> UserAddSection(snackbarHostState)
-                        1 -> VehicleAddSection(snackbarHostState)
-                        2 -> ProductAddSection(snackbarHostState)
-                    }
-                }
-
-                1 -> {
-                    when (selectedTabIndex) {
-                        0 -> UserRemoveSection(snackbarHostState)
-                        1 -> VehicleRemoveSection(snackbarHostState)
-                        2 -> ProductRemoveSection(snackbarHostState)
                     }
                 }
             }
@@ -276,7 +285,7 @@ fun ProductAddSection(snackbarHostState: SnackbarHostState) {
             items = Utility.values().toList(),
             selectedItem = utility,
             onItemSelected = { utility = it },
-            itemText = { "${it.displayName} "},
+            itemText = { "${it.displayName} " },
             label = "Seleziona Settore"
         )
 
@@ -286,7 +295,10 @@ fun ProductAddSection(snackbarHostState: SnackbarHostState) {
                 if (title.isNotBlank() && content.isNotBlank() && count.isNotBlank() && utility != null) {
                     productVm.insertProduct(
                         ProductEntity(
-                            title = title, content = content, count = count.toIntOrNull() ?: 0, utility = utility ?: Utility.ALTRI
+                            title = title,
+                            content = content,
+                            count = count.toIntOrNull() ?: 0,
+                            utility = utility ?: Utility.ALTRI
                         )
                     )
                     title = ""
