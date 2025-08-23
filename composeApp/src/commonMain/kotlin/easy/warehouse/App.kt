@@ -76,6 +76,9 @@ fun App() {
             var isAdmin by remember { mutableStateOf(false) }
             Button(onClick = {
                 showLoginScreen = !showLoginScreen
+                if(!showLoginScreen){
+                    isAdmin = false
+                }
             }) {
                 Text("Login")
             }

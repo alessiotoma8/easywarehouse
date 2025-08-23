@@ -2,10 +2,15 @@ package easy.warehouse.admin
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AddCircle
+import androidx.compose.material.icons.filled.RemoveCircle
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -17,12 +22,21 @@ import easy.warehouse.product.ProductEntity
 import easy.warehouse.product.ProductVm
 import org.jetbrains.compose.ui.tooling.preview.Preview
 
+data class TabAction(
+    val title: String,
+    val icon: ImageVector,
+    val color: Color,
+)
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 @Preview
 fun AdminScreen() {
     var selectedTabActionIndex by remember { mutableStateOf(0) }
-    val actions = listOf("Aggiungi", "Rimuovi")
+    val actions = listOf(
+        TabAction("Aggiungi", Icons.Default.AddCircle, Color(0xFF4CAF50)),
+        TabAction("Rimuovi", Icons.Default.RemoveCircle, Color(0xFFF44336))
+    )
 
     var selectedTabIndex by remember { mutableStateOf(0) }
     val tabs = listOf("Utenti", "Veicoli", "Prodotti")
@@ -40,17 +54,29 @@ fun AdminScreen() {
                 .fillMaxSize()
                 .background(MaterialTheme.colorScheme.surface)
         ) {
-            // Tab per l'azione (Aggiungi/Rimuovi)
-            TabRow(selectedTabIndex = selectedTabActionIndex) {
-                actions.forEachIndexed { index, title ->
+            TabRow(
+                selectedTabIndex = selectedTabActionIndex,
+                containerColor = MaterialTheme.colorScheme.surfaceVariant
+            ) {
+                actions.forEachIndexed { index, tabAction ->
                     Tab(
                         selected = selectedTabActionIndex == index,
                         onClick = { selectedTabActionIndex = index },
-                        text = { Text(title) }
-                    )
+                        selectedContentColor = tabAction.color,
+                        unselectedContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.background(Color.Transparent)
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(4.dp),
+                            modifier = Modifier.padding(12.dp)
+                        ) {
+                            Icon(imageVector = tabAction.icon, contentDescription = tabAction.title)
+                            Text(text = tabAction.title)
+                        }
+                    }
                 }
             }
-            // Tab per la categoria (Utenti/Veicoli/Prodotti)
             TabRow(selectedTabIndex = selectedTabIndex) {
                 tabs.forEachIndexed { index, title ->
                     Tab(
@@ -63,16 +89,15 @@ fun AdminScreen() {
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Mostra la sezione corretta
             when (selectedTabActionIndex) {
-                0 -> { // Sezione Aggiungi
+                0 -> {
                     when (selectedTabIndex) {
                         0 -> UserAddSection()
                         1 -> VehicleAddSection()
                         2 -> ProductAddSection()
                     }
                 }
-                1 -> { // Sezione Rimuovi
+                1 -> {
                     when (selectedTabIndex) {
                         0 -> UserRemoveSection()
                         1 -> VehicleRemoveSection()
@@ -84,7 +109,7 @@ fun AdminScreen() {
     }
 }
 
-// Sezioni di Aggiunta (codice precedente, rinominato per chiarezza)
+// Sezioni di Aggiunta con i campi di testo centrati e di larghezza limitata
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun UserAddSection() {
@@ -101,12 +126,16 @@ fun UserAddSection() {
     ) {
         Text("Inserisci un nuovo Utente", style = MaterialTheme.typography.titleLarge)
         OutlinedTextField(
-            value = name, onValueChange = { name = it },
-            label = { Text("Nome") }, modifier = Modifier.fillMaxWidth()
+            value = name,
+            onValueChange = { name = it },
+            label = { Text("Nome") },
+            modifier = Modifier.widthIn(max = 400.dp).fillMaxWidth()
         )
         OutlinedTextField(
-            value = surname, onValueChange = { surname = it },
-            label = { Text("Cognome") }, modifier = Modifier.fillMaxWidth()
+            value = surname,
+            onValueChange = { surname = it },
+            label = { Text("Cognome") },
+            modifier = Modifier.widthIn(max = 400.dp).fillMaxWidth()
         )
         Button(
             onClick = {
@@ -139,12 +168,16 @@ fun VehicleAddSection() {
     ) {
         Text("Inserisci un nuovo Veicolo", style = MaterialTheme.typography.titleLarge)
         OutlinedTextField(
-            value = vehiclePlate, onValueChange = { vehiclePlate = it },
-            label = { Text("Targa Veicolo") }, modifier = Modifier.fillMaxWidth()
+            value = vehiclePlate,
+            onValueChange = { vehiclePlate = it },
+            label = { Text("Targa Veicolo") },
+            modifier = Modifier.widthIn(max = 400.dp).fillMaxWidth()
         )
         OutlinedTextField(
-            value = vehicleName, onValueChange = { vehicleName = it },
-            label = { Text("Nome Veicolo") }, modifier = Modifier.fillMaxWidth()
+            value = vehicleName,
+            onValueChange = { vehicleName = it },
+            label = { Text("Nome Veicolo") },
+            modifier = Modifier.widthIn(max = 400.dp).fillMaxWidth()
         )
         Button(
             onClick = {
@@ -178,16 +211,22 @@ fun ProductAddSection() {
     ) {
         Text("Inserisci un nuovo Prodotto", style = MaterialTheme.typography.titleLarge)
         OutlinedTextField(
-            value = title, onValueChange = { title = it },
-            label = { Text("Titolo Prodotto") }, modifier = Modifier.fillMaxWidth()
+            value = title,
+            onValueChange = { title = it },
+            label = { Text("Titolo Prodotto") },
+            modifier = Modifier.widthIn(max = 400.dp).fillMaxWidth()
         )
         OutlinedTextField(
-            value = content, onValueChange = { content = it },
-            label = { Text("Descrizione") }, modifier = Modifier.fillMaxWidth()
+            value = content,
+            onValueChange = { content = it },
+            label = { Text("Descrizione") },
+            modifier = Modifier.widthIn(max = 400.dp).fillMaxWidth()
         )
         OutlinedTextField(
-            value = count, onValueChange = { count = it },
-            label = { Text("Quantità") }, modifier = Modifier.fillMaxWidth()
+            value = count,
+            onValueChange = { count = it },
+            label = { Text("Quantità") },
+            modifier = Modifier.widthIn(max = 400.dp).fillMaxWidth()
         )
         Button(
             onClick = {
@@ -209,7 +248,7 @@ fun ProductAddSection() {
     }
 }
 
-// Sezioni di Rimozione (NUOVO CODICE)
+// Sezioni di Rimozione (non hanno subito modifiche)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun UserRemoveSection() {
@@ -333,7 +372,7 @@ fun <T> GenericExposedDropdownMenu(
     ExposedDropdownMenuBox(
         expanded = expanded,
         onExpandedChange = { expanded = !expanded },
-        modifier = modifier
+        modifier = modifier.widthIn(max = 400.dp).fillMaxWidth()
     ) {
         TextField(
             readOnly = true,
