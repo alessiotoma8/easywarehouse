@@ -20,8 +20,8 @@ import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Remove
+import androidx.compose.material.icons.filled.AddShoppingCart
+import androidx.compose.material.icons.filled.RemoveShoppingCart
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -31,17 +31,14 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
-import androidx.compose.material3.FilledIconButton
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
-import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -58,6 +55,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.times
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import easy.ui.theme.AppTheme
 import easy.warehouse.admin.AdminScreen
 import easy.warehouse.destination.VehicleDestinationEntity
 import easy.warehouse.destination.VehicleVm
@@ -66,7 +64,6 @@ import easy.warehouse.employee.EmployeeVm
 import easy.warehouse.product.PendingChange
 import easy.warehouse.product.ProductEntity
 import easy.warehouse.product.ProductVm
-import kotlinx.coroutines.flow.consumeAsFlow
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.ui.tooling.preview.Preview
 
@@ -77,11 +74,8 @@ private val DarkRed = Color(0xFF8B0000)
 @Composable
 @Preview
 fun App() {
-    MaterialTheme(
-        colorScheme = MaterialTheme.colorScheme.copy(
-            primary = Color.Blue
-        ),
-        shapes = MaterialTheme.shapes.copy(extraSmall = RoundedCornerShape(16.dp))
+    AppTheme(
+        //xshapes = AppTheme.shapes.copy(extraSmall = RoundedCornerShape(16.dp))
     ) {
         Column(
             modifier = Modifier
@@ -203,7 +197,7 @@ fun WarehouseScreen() {
                 // Titolo "Prodotti" come elemento fisso
                 item(span = { GridItemSpan(this.maxLineSpan) }) {
                     Text(
-                        text = "Prodotti",
+                        text = "Prendi o Lascia i prodotti dal magazzino!",
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Bold,
                         modifier = Modifier
@@ -254,47 +248,62 @@ fun WarehouseScreen() {
 
 @Composable
 fun ProductItem(product: ProductEntity, productVm: ProductVm) {
-    Row(
-        modifier = Modifier.padding(16.dp),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Column(
-            modifier = Modifier.weight(1f)
-        ) {
-            Text(product.title, style = MaterialTheme.typography.titleMedium)
-            Text(product.content, style = MaterialTheme.typography.bodyMedium)
-        }
+    Column {
         Row(
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
-            verticalAlignment = Alignment.CenterVertically
+            modifier = Modifier.padding(16.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically,
         ) {
-            FilledIconButton(
-                onClick = { productVm.increaseCount(product.id) },
-                colors = IconButtonDefaults.filledIconButtonColors(
-                    containerColor = DarkGreen,
-                    contentColor = Color.White
-                )
+            Column(
+                modifier = Modifier.weight(1f)
             ) {
-                Icon(Icons.Default.Add, contentDescription = "Aggiungi")
+                Text(product.title, style = MaterialTheme.typography.titleMedium)
+                Text(product.content, style = MaterialTheme.typography.bodyMedium)
             }
-            FilledIconButton(
-                onClick = { productVm.decreaseCount(product.id) },
-                colors = IconButtonDefaults.filledIconButtonColors(
-                    containerColor = DarkRed,
-                    contentColor = Color.White
-                )
-            ) {
-                Icon(Icons.Default.Remove, contentDescription = "Rimuovi")
-            }
+
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Text(text = "Conteggio")
+                Text(text = "Tot")
                 Text(
                     text = product.count.toString(),
                     style = MaterialTheme.typography.titleMedium
                 )
             }
         }
+
+
+        HorizontalDivider()
+
+
+        Row(
+            modifier = Modifier.padding(16.dp).align(Alignment.End),
+            horizontalArrangement = Arrangement.spacedBy(16.dp),
+        ) {
+            Button(
+                onClick = { productVm.decreaseCount(product.id) },
+                enabled = product.count > 0,
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = DarkGreen,
+                    contentColor = Color.White
+                )
+            ) {
+                Icon(Icons.Default.AddShoppingCart, contentDescription = "Prendi")
+                Spacer(modifier = Modifier.width(8.dp))
+                Text("Prendi")
+            }
+
+            Button(
+                onClick = { productVm.increaseCount(product.id) },
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = DarkRed,
+                    contentColor = Color.White
+                )
+            ) {
+                Icon(Icons.Default.RemoveShoppingCart, contentDescription = "Lascia")
+                Spacer(modifier = Modifier.width(8.dp))
+                Text("Lascia")
+            }
+        }
+
     }
 }
 
@@ -324,9 +333,9 @@ fun ChangesSummary(
             )
             Spacer(modifier = Modifier.height(8.dp))
             pendingChanges.values.forEach { change ->
-                val action = if (change.delta > 0) "Aggiunto" else "Rimosso"
+                val action = if (change.delta > 0) "Hai lasciato" else "Hai preso"
                 val delta = if (change.delta > 0) change.delta else -change.delta
-                val color = if (change.delta > 0) Color.Green else Color.Red
+                val color = if (change.delta > 0) Color.Red else Color.Green
 
                 Text(
                     text = "$action $delta: ${change.title}",
@@ -348,12 +357,12 @@ fun ChangesSummary(
                 ) {
                     Text("Cancella")
                 }
-                    Button(
-                        onClick = onSave,
-                        enabled = isSaveEnabled
-                    ) {
-                        Text("Salva")
-                    }
+                Button(
+                    onClick = onSave,
+                    enabled = isSaveEnabled
+                ) {
+                    Text("Salva")
+                }
             }
         }
     }
@@ -444,7 +453,7 @@ fun SearchBar(
     query: String,
     onQueryChange: (String) -> Unit,
     modifier: Modifier = Modifier,
-    placeholder: String = "Cerca..."
+    placeholder: String = "Cerca...",
 ) {
     TextField(
         value = query,

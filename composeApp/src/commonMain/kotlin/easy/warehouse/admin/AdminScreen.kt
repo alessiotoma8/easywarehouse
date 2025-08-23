@@ -56,7 +56,6 @@ fun AdminScreen() {
             modifier = Modifier
                 .padding(innerPadding)
                 .fillMaxSize()
-                .background(MaterialTheme.colorScheme.surface)
         ) {
             TabRow(
                 selectedTabIndex = selectedTabActionIndex,
