@@ -21,7 +21,7 @@ data class PendingChange(
 )
 
 class ProductVm : ViewModel() {
-    private val dbRepo = getRoomDatabase().getDao()
+    private val dbRepo = getRoomDatabase().getProductDao()
 
     private val products = dbRepo.getAllAsFlow()
 

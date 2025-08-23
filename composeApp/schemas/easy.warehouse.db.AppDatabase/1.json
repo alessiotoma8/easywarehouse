@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 1,
-    "identityHash": "9d98db3cbbb663654bc86f9cdc18fa2e",
+    "identityHash": "d1a7aad6417fe0dcee6480b9e8d9498d",
     "entities": [
       {
         "tableName": "ProductEntity",
@@ -69,11 +69,35 @@
             "id"
           ]
         }
+      },
+      {
+        "tableName": "VehicleDestinationEntity",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`vehiclePlate` TEXT NOT NULL, `vehicleName` TEXT NOT NULL, PRIMARY KEY(`vehiclePlate`))",
+        "fields": [
+          {
+            "fieldPath": "vehiclePlate",
+            "columnName": "vehiclePlate",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "vehicleName",
+            "columnName": "vehicleName",
+            "affinity": "TEXT",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "vehiclePlate"
+          ]
+        }
       }
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '9d98db3cbbb663654bc86f9cdc18fa2e')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'd1a7aad6417fe0dcee6480b9e8d9498d')"
     ]
   }
 }
