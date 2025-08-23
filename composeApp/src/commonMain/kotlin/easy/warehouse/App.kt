@@ -13,14 +13,16 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeContentPadding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Remove
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -55,7 +57,6 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.times
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import easy.ui.theme.AppTheme
@@ -72,15 +73,14 @@ import kotlinx.coroutines.launch
 import org.jetbrains.compose.ui.tooling.preview.Preview
 
 private val accountManager = AccountManager()
-private val DarkGreen = Color(0xFF006400)
-private val DarkRed = Color(0xFF8B0000)
+
+val DarkGreen = Color(0xFF1B5E20)
+val DarkRed = Color(0xFFB71C1C)
 
 @Composable
 @Preview
 fun App() {
-    AppTheme(
-        //xshapes = AppTheme.shapes.copy(extraSmall = RoundedCornerShape(16.dp))
-    ) {
+    AppTheme {
         Column(
             modifier = Modifier
                 .safeContentPadding()
@@ -89,12 +89,16 @@ fun App() {
         ) {
             var showLoginScreen by remember { mutableStateOf(false) }
             var isAdmin by remember { mutableStateOf(false) }
-            Button(onClick = {
-                showLoginScreen = !showLoginScreen
-                if (!showLoginScreen) {
-                    isAdmin = false
-                }
-            }) {
+            Button(
+                onClick = {
+                    showLoginScreen = !showLoginScreen
+                    if (!showLoginScreen) {
+                        isAdmin = false
+                    }
+                },
+                shape = RoundedCornerShape(topStart = 0.dp, topEnd = 0.dp),
+                modifier = Modifier.fillMaxWidth()
+            ) {
                 if (isAdmin) {
                     Text("Esci")
                 } else {
@@ -130,13 +134,15 @@ fun WarehouseScreen() {
     var selectedVehicle by remember { mutableStateOf<VehicleDestinationEntity?>(null) }
 
     val snackbarHostState = remember { SnackbarHostState() }
-
     val coroutineScope = rememberCoroutineScope()
 
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Magazzino") }
+                title = { Text("Magazzino", fontWeight = FontWeight.ExtraBold, color = MaterialTheme.colorScheme.onPrimaryContainer) },
+                colors = androidx.compose.material3.TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.primaryContainer
+                )
             )
         },
         snackbarHost = { SnackbarHost(snackbarHostState) }
@@ -146,22 +152,14 @@ fun WarehouseScreen() {
                 .padding(innerPadding)
                 .fillMaxSize()
         ) {
-            // Contenuto della griglia
             LazyVerticalGrid(
-                columns = GridCells.Adaptive(minSize = 400.dp),
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(8.dp),
-                contentPadding = PaddingValues(
-                    bottom = products.size / 3 * 100.dp,
-                    start = 8.dp,
-                    end = 8.dp
-                ),
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
+                columns = GridCells.Adaptive(minSize = 300.dp),
+                modifier = Modifier.fillMaxSize(),
+                contentPadding = PaddingValues(16.dp),
+                horizontalArrangement = Arrangement.spacedBy(16.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                // Selezioni Utente e Destinazione come elementi fissi
-                item {
+                item(span = { GridItemSpan(this.maxLineSpan) }) {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(16.dp),
@@ -174,9 +172,9 @@ fun WarehouseScreen() {
                                 "Utente",
                                 style = MaterialTheme.typography.titleLarge,
                                 fontWeight = FontWeight.Bold,
-                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 16.dp)
+                                color = MaterialTheme.colorScheme.onBackground,
+                                modifier = Modifier.padding(horizontal = 4.dp, vertical = 8.dp)
                             )
-                            Spacer(modifier = Modifier.height(8.dp))
                             UserSelection(
                                 employees = employees,
                                 selectedEmployee = selectedEmployee,
@@ -190,9 +188,9 @@ fun WarehouseScreen() {
                                 "Destinazione",
                                 style = MaterialTheme.typography.titleLarge,
                                 fontWeight = FontWeight.Bold,
-                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 16.dp)
+                                color = MaterialTheme.colorScheme.onBackground,
+                                modifier = Modifier.padding(horizontal = 4.dp, vertical = 8.dp)
                             )
-                            Spacer(modifier = Modifier.height(8.dp))
                             DestinationSelection(
                                 vehicles = vehicles,
                                 selectedVehicle = selectedVehicle,
@@ -202,15 +200,18 @@ fun WarehouseScreen() {
                     }
                 }
 
-                // Titolo "Prodotti" come elemento fisso
+                item(span = { GridItemSpan(this.maxLineSpan) }) {
+                    HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+                }
+
                 item(span = { GridItemSpan(this.maxLineSpan) }) {
                     Text(
-                        text = "Prendi o Lascia i prodotti dal magazzino!",
-                        style = MaterialTheme.typography.titleLarge,
+                        text = "Gestione Prodotti",
+                        style = MaterialTheme.typography.headlineMedium,
                         fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onBackground,
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(horizontal = 8.dp, vertical = 16.dp)
                     )
                 }
 
@@ -225,17 +226,11 @@ fun WarehouseScreen() {
                     }
                 }
 
-                // Griglia di prodotti
                 items(products) { product ->
-                    Card(
-                        modifier = Modifier.widthIn(min = 200.dp, max = 400.dp)
-                    ) {
-                        ProductItem(product, productVm)
-                    }
+                    ProductItem(product, productVm)
                 }
             }
 
-            // Card delle modifiche posizionata come overlay
             if (pendingChanges.isNotEmpty()) {
                 ChangesSummary(
                     pendingChanges = pendingChanges,
@@ -259,67 +254,95 @@ fun WarehouseScreen() {
 
 @Composable
 fun ProductItem(product: ProductEntity, productVm: ProductVm) {
-    Column {
-        Row(
-            modifier = Modifier.padding(16.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically,
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceContainer
+        )
+    ) {
+        Column(
+            modifier = Modifier.padding(16.dp)
         ) {
-            Column(
-                modifier = Modifier.weight(1f)
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(
-                    product.title,
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold
-                )
-                Text(
-                    product.content,
-                    style = MaterialTheme.typography.bodyMedium,
-                    fontWeight = FontWeight.SemiBold
-                )
-                Text(product.utility.displayName, style = MaterialTheme.typography.bodySmall)
+                Column(
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Text(
+                        product.title,
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                    Text(
+                        product.content,
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontWeight = FontWeight.Normal,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Text(
+                        product.utility.displayName,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text(text = "Totale", color = MaterialTheme.colorScheme.onSurface)
+                    Text(
+                        text = product.count.toString(),
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                }
             }
 
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Text(text = "Tot")
-                Text(
-                    text = product.count.toString(),
-                    style = MaterialTheme.typography.titleMedium
-                )
+            HorizontalDivider(modifier = Modifier.padding(vertical = 12.dp))
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Button(
+                    onClick = { productVm.decreaseCount(product.id) },
+                    enabled = product.count > 0,
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.primary
+                    ),
+                    shape = RoundedCornerShape(12.dp),
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Remove,
+                        contentDescription = "Prendi",
+                        modifier = Modifier.size(20.dp)
+                    )
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text("Prendi")
+                }
+
+                Button(
+                    onClick = { productVm.increaseCount(product.id) },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.error
+                    ),
+                    shape = RoundedCornerShape(12.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Add,
+                        contentDescription = "Lascia",
+                        modifier = Modifier.size(20.dp)
+                    )
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text("Lascia")
+                }
             }
         }
-
-
-        HorizontalDivider()
-
-
-        Row(
-            modifier = Modifier.padding(16.dp).align(Alignment.End),
-            horizontalArrangement = Arrangement.spacedBy(16.dp),
-        ) {
-            Button(
-                onClick = { productVm.decreaseCount(product.id) },
-                enabled = product.count > 0,
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = DarkGreen,
-                    contentColor = Color.White
-                )
-            ) {
-                Text("Prendi")
-            }
-
-            Button(
-                onClick = { productVm.increaseCount(product.id) },
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = DarkRed,
-                    contentColor = Color.White
-                )
-            ) {
-                Text("Lascia")
-            }
-        }
-
     }
 }
 
@@ -333,31 +356,54 @@ fun ChangesSummary(
     modifier: Modifier = Modifier,
 ) {
     Card(
-        modifier = modifier.width(300.dp),
+        modifier = modifier.width(350.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
         colors = CardDefaults.cardColors(
-            containerColor = Color.DarkGray
+            containerColor = MaterialTheme.colorScheme.surfaceContainerHigh
         )
     ) {
         Column(
-            modifier = Modifier.padding(16.dp)
+            modifier = Modifier.padding(20.dp)
         ) {
             Text(
-                "Modifiche da Applicare",
+                "Modifiche in Sospeso",
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Bold,
-                color = Color.White
+                color = MaterialTheme.colorScheme.onSurface
             )
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(12.dp))
             pendingChanges.values.forEach { change ->
-                val action = if (change.delta > 0) "Hai lasciato" else "Hai preso"
+                val action = if (change.delta > 0) "Lasciato" else "Preso"
                 val delta = if (change.delta > 0) change.delta else -change.delta
-                val color = if (change.delta > 0) Color.Red else Color.Green
+                val color = if (change.delta > 0) DarkRed else DarkGreen
 
-                Text(
-                    text = "$action $delta: ${change.title}",
-                    color = color,
-                    style = MaterialTheme.typography.bodyMedium
-                )
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text(
+                        text = "$action $delta: ${change.title}",
+                        color = color,
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                    if (action == "Preso") {
+                        Icon(
+                            imageVector = Icons.Default.Remove,
+                            contentDescription = null,
+                            tint = DarkGreen,
+                            modifier = Modifier.size(16.dp)
+                        )
+                    } else {
+                        Icon(
+                            imageVector = Icons.Default.Add,
+                            contentDescription = null,
+                            tint = DarkRed,
+                            modifier = Modifier.size(16.dp)
+                        )
+                    }
+                }
+                Spacer(modifier = Modifier.height(4.dp))
             }
 
             Row(
@@ -369,13 +415,21 @@ fun ChangesSummary(
                 Button(
                     onClick = onClear,
                     enabled = isClearEnabled,
-                    modifier = Modifier.padding(end = 8.dp)
+                    modifier = Modifier.padding(end = 8.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.secondary
+                    ),
+                    shape = RoundedCornerShape(12.dp)
                 ) {
                     Text("Cancella")
                 }
                 Button(
                     onClick = onSave,
-                    enabled = isSaveEnabled
+                    enabled = isSaveEnabled,
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.primary
+                    ),
+                    shape = RoundedCornerShape(12.dp)
                 ) {
                     Text("Salva")
                 }
@@ -390,16 +444,13 @@ fun UserSelection(
     selectedEmployee: EmployeeEntity?,
     onEmployeeSelected: (EmployeeEntity) -> Unit,
 ) {
-    Row(verticalAlignment = Alignment.CenterVertically) {
-        Spacer(modifier = Modifier.width(8.dp))
-        GenericExposedDropdownMenu(
-            items = employees,
-            selectedItem = selectedEmployee,
-            onItemSelected = onEmployeeSelected,
-            itemText = { "${it.name} ${it.surname}" },
-            label = "Seleziona Utente"
-        )
-    }
+    GenericExposedDropdownMenu(
+        items = employees,
+        selectedItem = selectedEmployee,
+        onItemSelected = onEmployeeSelected,
+        itemText = { "${it.name} ${it.surname}" },
+        label = "Seleziona Utente"
+    )
 }
 
 @Composable
@@ -408,16 +459,13 @@ fun DestinationSelection(
     selectedVehicle: VehicleDestinationEntity?,
     onVehicleSelected: (VehicleDestinationEntity) -> Unit,
 ) {
-    Row(verticalAlignment = Alignment.CenterVertically) {
-        Spacer(modifier = Modifier.width(8.dp))
-        GenericExposedDropdownMenu(
-            items = vehicles,
-            selectedItem = selectedVehicle,
-            onItemSelected = onVehicleSelected,
-            itemText = { it.vehicleName + " - (${it.vehiclePlate}) " },
-            label = "Seleziona Veicolo"
-        )
-    }
+    GenericExposedDropdownMenu(
+        items = vehicles,
+        selectedItem = selectedVehicle,
+        onItemSelected = onVehicleSelected,
+        itemText = { it.vehicleName + " - (${it.vehiclePlate}) " },
+        label = "Seleziona Veicolo"
+    )
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -462,7 +510,6 @@ fun <T> GenericExposedDropdownMenu(
                 searchQuery = ""
             }
         ) {
-            // Focus automatico sulla searchbar
             LaunchedEffect(expanded) {
                 if (expanded) {
                     searchFocusRequester.requestFocus()
@@ -474,13 +521,14 @@ fun <T> GenericExposedDropdownMenu(
                 onValueChange = { searchQuery = it },
                 placeholder = { Text("Cerca...") },
                 singleLine = true,
+                leadingIcon = { Icon(Icons.Default.Search, contentDescription = "Cerca") },
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(8.dp)
                     .focusRequester(searchFocusRequester)
             )
 
-            filteredItems.forEachIndexed { index, item ->
+            filteredItems.forEachIndexed { _, item ->
                 DropdownMenuItem(
                     text = { Text(itemText(item)) },
                     onClick = {
@@ -501,14 +549,14 @@ fun SearchBar(
     query: String,
     onQueryChange: (String) -> Unit,
     modifier: Modifier = Modifier,
-    placeholder: String = "Cerca...",
+    placeholder: String = "Cerca per titolo, contenuto o ID...",
 ) {
     TextField(
         value = query,
         onValueChange = onQueryChange,
         modifier = modifier
             .fillMaxWidth()
-            .padding(8.dp),
+            .padding(horizontal = 4.dp),
         placeholder = { Text(placeholder) },
         singleLine = true,
         leadingIcon = {
@@ -517,10 +565,8 @@ fun SearchBar(
                 contentDescription = "Search Icon"
             )
         },
-        shape = RoundedCornerShape(12.dp)
+        shape = RoundedCornerShape(16.dp)
     )
-
-
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -533,28 +579,36 @@ fun ProductFilterChips(
     val allUtilities = Utility.entries
 
     FlowRow(
-        modifier = modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(8.dp)
+        modifier = modifier.fillMaxWidth().padding(horizontal = 4.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        verticalArrangement = Arrangement.Center
     ) {
         FilterChip(
             selected = selectedUtilities == null,
             onClick = { productVm.toggleUtilityFilter(null) },
             label = {
-                Text(text = "Tutti".uppercase(), style = MaterialTheme.typography.titleMedium)
-            }
+                Text(text = "Tutti".uppercase(), style = MaterialTheme.typography.titleLarge)
+            },
+            colors = androidx.compose.material3.FilterChipDefaults.filterChipColors(
+                selectedContainerColor = MaterialTheme.colorScheme.primary,
+                selectedLabelColor = MaterialTheme.colorScheme.onPrimary
+            )
         )
         allUtilities.forEach { utility ->
             val isSelected = selectedUtilities == utility
             FilterChip(
-                modifier = Modifier.weight(1f),
                 selected = isSelected,
                 onClick = { productVm.toggleUtilityFilter(utility) },
                 label = {
                     Text(
                         text = utility.displayName.uppercase(),
-                        style = MaterialTheme.typography.titleMedium
+                        style = MaterialTheme.typography.titleLarge
                     )
-                }
+                },
+                colors = androidx.compose.material3.FilterChipDefaults.filterChipColors(
+                    selectedContainerColor = MaterialTheme.colorScheme.primary,
+                    selectedLabelColor = MaterialTheme.colorScheme.onPrimary
+                )
             )
         }
     }
