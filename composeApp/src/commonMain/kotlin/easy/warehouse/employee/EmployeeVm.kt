@@ -25,4 +25,9 @@ class EmployeeVm: ViewModel() {
         dbRepo.insert(newEmployee)
         _employees.value = dbRepo.selectAll()
     }
+
+    fun removeEmployee(id: Long) = viewModelScope.launch {
+        dbRepo.removeById(id)
+        _employees.value = dbRepo.selectAll()
+    }
 }

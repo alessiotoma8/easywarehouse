@@ -1,5 +1,6 @@
 package easy.warehouse
 
+import LoginScreen
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -11,6 +12,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeContentPadding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
@@ -47,12 +49,17 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import easy.warehouse.admin.AdminScreen
+import easy.warehouse.destination.VehicleDestinationEntity
 import easy.warehouse.destination.VehicleVm
+import easy.warehouse.employee.EmployeeEntity
 import easy.warehouse.employee.EmployeeVm
 import easy.warehouse.product.PendingChange
 import easy.warehouse.product.ProductEntity
 import easy.warehouse.product.ProductVm
 import org.jetbrains.compose.ui.tooling.preview.Preview
+
+private val accountManager = AccountManager()
 
 @Composable
 @Preview
@@ -65,7 +72,22 @@ fun App() {
                 .fillMaxSize(),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            WarehouseScreen()
+            var showLoginScreen by remember { mutableStateOf(false) }
+            var isAdmin by remember { mutableStateOf(false) }
+            Button(onClick = {
+                showLoginScreen = !showLoginScreen
+            }) {
+                Text("Login")
+            }
+            if (!showLoginScreen) {
+                WarehouseScreen()
+            } else if(!isAdmin){
+                LoginScreen { us, pwd ->
+                    isAdmin = accountManager.login(us, pwd)
+                }
+            }else {
+                AdminScreen()
+            }
         }
     }
 }
@@ -76,6 +98,14 @@ fun WarehouseScreen() {
     val productVm = viewModel<ProductVm>()
     val products by productVm.displayProducts.collectAsStateWithLifecycle(emptyList())
     val pendingChanges by productVm.pendingChanges.collectAsStateWithLifecycle(emptyMap())
+
+    val employeeVm = viewModel<EmployeeVm>()
+    val employees by employeeVm.employees.collectAsStateWithLifecycle(emptyList())
+    var selectedEmployee by remember { mutableStateOf<EmployeeEntity?>(null) }
+
+    val vehicleVm = viewModel<VehicleVm>()
+    val vehicles by vehicleVm.vehicles.collectAsStateWithLifecycle(emptyList())
+    var selectedVehicle by remember { mutableStateOf<VehicleDestinationEntity?>(null) }
 
     Scaffold(
         topBar = {
@@ -89,44 +119,61 @@ fun WarehouseScreen() {
                 .padding(innerPadding)
                 .fillMaxSize()
         ) {
-            // Contenuto principale (pulsante "Add Product" e lista)
             Column(
-                modifier = Modifier
-                    .fillMaxSize()
+                modifier = Modifier.fillMaxSize()
             ) {
                 Row(
-                    modifier = Modifier
-                        .fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween
+                    modifier = Modifier.fillMaxWidth().padding(8.dp),
+                    horizontalArrangement = Arrangement.spacedBy(16.dp),
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    UserSelection()
-                    DestinationSelection()
-                }
-
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(8.dp),
-                    horizontalArrangement = Arrangement.Center
-                ) {
-                    Button(onClick = {
-                        productVm.insertProduct(
-                            ProductEntity(
-                                title = "Product ${products.size + 1}",
-                                content = "This is product number ${products.size + 1}",
-                                count = 0
-                            )
+                    Column(
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Text(
+                            "Utente",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold
                         )
-                    }) {
-                        Text("Add Product")
+                        Spacer(modifier = Modifier.height(8.dp))
+                        UserSelection(
+                            employees = employees,
+                            selectedEmployee = selectedEmployee,
+                            onEmployeeSelected = { selectedEmployee = it }
+                        )
+                    }
+                    Column(
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Text(
+                            "Destinazione",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        DestinationSelection(
+                            vehicles = vehicles,
+                            selectedVehicle = selectedVehicle,
+                            onVehicleSelected = { selectedVehicle = it }
+                        )
                     }
                 }
+
+                Text(
+                    text = "Prodotti",
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(MaterialTheme.colorScheme.surface)
+                        .padding(horizontal = 8.dp, vertical = 16.dp)
+                )
 
                 LazyVerticalGrid(
                     columns = GridCells.Adaptive(minSize = 400.dp),
                     modifier = Modifier
                         .padding(8.dp)
-                        .weight(1f), // Aggiungi un peso per far sì che la lista occupi lo spazio rimanente
+                        .weight(1f),
                     horizontalArrangement = Arrangement.spacedBy(12.dp),
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
@@ -140,8 +187,9 @@ fun WarehouseScreen() {
                         pendingChanges = pendingChanges,
                         onSave = { productVm.saveChanges() },
                         onClear = { productVm.clearChanges() },
-                        isSaveEnabled = pendingChanges.isNotEmpty(),
+                        isSaveEnabled = selectedEmployee != null && selectedVehicle != null,
                         isClearEnabled = pendingChanges.isNotEmpty(),
+                        modifier = Modifier.align(Alignment.End),
                     )
                 }
             }
@@ -208,14 +256,13 @@ fun ChangesSummary(
     modifier: Modifier = Modifier,
 ) {
     Card(
-        modifier = modifier.fillMaxWidth(),
+        modifier = modifier.width(300.dp),
         colors = CardDefaults.cardColors(
             containerColor = Color.DarkGray
         )
     ) {
         Column(
-            modifier = Modifier
-                .padding(16.dp)
+            modifier = Modifier.padding(16.dp)
         ) {
             Text(
                 "Changes to Apply",
@@ -236,7 +283,6 @@ fun ChangesSummary(
                 )
             }
 
-            // Pulsanti in basso a destra
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -262,52 +308,40 @@ fun ChangesSummary(
 }
 
 @Composable
-fun DestinationSelection() {
-    val vehicleVm = viewModel<VehicleVm>()
-    val vehicles by vehicleVm.vehicles.collectAsStateWithLifecycle()
-
-    var selectedVehicle by remember { mutableStateOf(vehicles.firstOrNull()?.vehiclePlate ?: "") }
-
-    Button(onClick = {
-        vehicleVm.addVehicle(
-            "test", "abc"
+fun UserSelection(
+    employees: List<EmployeeEntity>,
+    selectedEmployee: EmployeeEntity?,
+    onEmployeeSelected: (EmployeeEntity) -> Unit,
+) {
+    val employeeVm = viewModel<EmployeeVm>()
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        Spacer(modifier = Modifier.width(8.dp))
+        GenericExposedDropdownMenu(
+            items = employees,
+            selectedItem = selectedEmployee,
+            onItemSelected = onEmployeeSelected,
+            itemText = { "${it.name} ${it.surname}" },
+            label = "Select User"
         )
-    }) {
-        Text("Add Vehicle")
     }
-
-    GenericExposedDropdownMenu(
-        items = vehicles,
-        selectedItem = vehicles.find { it.vehiclePlate == selectedVehicle },
-        onItemSelected = { vehicle -> selectedVehicle = vehicle.vehiclePlate },
-        itemText = { it.vehicleName },
-        label = "Select Vehicle"
-    )
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun UserSelection() {
-    val employeeVm = viewModel<EmployeeVm>()
-    val employees by employeeVm.employees.collectAsStateWithLifecycle()
-
-    var selectedEmployee by remember { mutableStateOf(employees.firstOrNull()?.id ?: 0) }
-
-    Button(onClick = {
-        employeeVm.addEmployee(
-            "test", "abc"
+fun DestinationSelection(
+    vehicles: List<VehicleDestinationEntity>,
+    selectedVehicle: VehicleDestinationEntity?,
+    onVehicleSelected: (VehicleDestinationEntity) -> Unit,
+) {
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        Spacer(modifier = Modifier.width(8.dp))
+        GenericExposedDropdownMenu(
+            items = vehicles,
+            selectedItem = selectedVehicle,
+            onItemSelected = onVehicleSelected,
+            itemText = { it.vehicleName },
+            label = "Select Vehicle"
         )
-    }) {
-        Text("Add eployee")
     }
-
-    GenericExposedDropdownMenu(
-        items = employees,
-        selectedItem = employees.find { it.id == selectedEmployee },
-        onItemSelected = { employee -> selectedEmployee = employee.id },
-        itemText = { "${it.name} ${it.surname}" },
-        label = "Select User"
-    )
 }
 
 @OptIn(ExperimentalMaterial3Api::class)

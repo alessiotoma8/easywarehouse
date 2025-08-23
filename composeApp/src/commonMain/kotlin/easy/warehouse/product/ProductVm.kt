@@ -99,4 +99,11 @@ class ProductVm : ViewModel() {
         dbRepo.insert(product)
     }
 
+    fun removeProduct(id: Long) = viewModelScope.launch {
+        dbRepo.deleteById(id)
+        val currentChanges = _pendingChanges.value.toMutableMap()
+        currentChanges.remove(id)
+        _pendingChanges.value = currentChanges
+    }
+
 }

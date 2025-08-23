@@ -26,4 +26,9 @@ class VehicleVm: ViewModel()  {
         dbRepo.insert(newVehicle)
         _vehicles.value = dbRepo.selectAll()
     }
+
+    fun removeVehicle(plate: String) = viewModelScope.launch {
+        dbRepo.removeById(plate)
+        _vehicles.value = dbRepo.selectAll()
+    }
 }
