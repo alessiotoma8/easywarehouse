@@ -1,13 +1,7 @@
 package easy.warehouse
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.safeContentPadding
-import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
@@ -15,24 +9,18 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Remove
-import androidx.compose.material3.Button
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilledIconButton
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButtonDefaults
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import easy.warehouse.product.PendingChange
 import easy.warehouse.product.ProductEntity
 import easy.warehouse.product.ProductVm
 import org.jetbrains.compose.ui.tooling.preview.Preview
@@ -48,8 +36,6 @@ fun App() {
                 .fillMaxSize(),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-
-
             WarehouseScreen()
         }
     }
@@ -59,19 +45,8 @@ fun App() {
 @Composable
 fun WarehouseScreen() {
     val productVm = viewModel<ProductVm>()
-    val products by productVm.products.collectAsStateWithLifecycle(emptyList())
-
-    Button(onClick = {
-        productVm.insertProduct(
-            ProductEntity(
-                title = "Product ${products.size + 1}",
-                content = "This is product number ${products.size + 1}",
-                count = 0
-            )
-        )
-    }) {
-        Text("Add Product")
-    }
+    val products by productVm.displayProducts.collectAsStateWithLifecycle(emptyList())
+    val pendingChanges by productVm.pendingChanges.collectAsStateWithLifecycle(emptyMap())
 
     Scaffold(
         topBar = {
@@ -80,16 +55,57 @@ fun WarehouseScreen() {
             )
         }
     ) { innerPadding ->
-        LazyVerticalGrid(
-            columns = GridCells.Adaptive(minSize = 400.dp),
+        Box(
             modifier = Modifier
                 .padding(innerPadding)
-                .padding(8.dp),
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
+                .fillMaxSize()
         ) {
-            items(products) { product ->
-                ProductItem(product, productVm)
+            // Contenuto principale (pulsante "Add Product" e lista)
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(8.dp),
+                    horizontalArrangement = Arrangement.Center
+                ) {
+                    Button(onClick = {
+                        productVm.insertProduct(
+                            ProductEntity(
+                                title = "Product ${products.size + 1}",
+                                content = "This is product number ${products.size + 1}",
+                                count = 0
+                            )
+                        )
+                    }) {
+                        Text("Add Product")
+                    }
+                }
+
+                LazyVerticalGrid(
+                    columns = GridCells.Adaptive(minSize = 400.dp),
+                    modifier = Modifier
+                        .padding(8.dp)
+                        .weight(1f), // Aggiungi un peso per far sì che la lista occupi lo spazio rimanente
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    items(products) { product ->
+                        ProductItem(product, productVm)
+                    }
+                }
+
+                if (pendingChanges.isNotEmpty()) {
+                    ChangesSummary(
+                        pendingChanges = pendingChanges,
+                        onSave = { productVm.saveChanges() },
+                        onClear = { productVm.clearChanges() },
+                        isSaveEnabled = pendingChanges.isNotEmpty(),
+                        isClearEnabled = pendingChanges.isNotEmpty(),
+                    )
+                }
             }
         }
     }
@@ -99,7 +115,7 @@ fun WarehouseScreen() {
 fun ProductItem(product: ProductEntity, productVm: ProductVm) {
     Row(
         modifier = Modifier
-            .widthIn(min = 400.dp, max = 600.dp)
+            .widthIn(min = 200.dp, max = 400.dp)
             .padding(12.dp)
             .clip(RoundedCornerShape(12.dp))
             .background(MaterialTheme.colorScheme.surfaceVariant)
@@ -116,9 +132,7 @@ fun ProductItem(product: ProductEntity, productVm: ProductVm) {
             verticalAlignment = Alignment.CenterVertically
         ) {
             FilledIconButton(
-                onClick = {
-                    productVm.increaseCount(product.id)
-                },
+                onClick = { productVm.increaseCount(product.id) },
                 colors = IconButtonDefaults.filledIconButtonColors(
                     containerColor = Color.Green,
                     contentColor = Color.White
@@ -127,9 +141,7 @@ fun ProductItem(product: ProductEntity, productVm: ProductVm) {
                 Icon(Icons.Default.Add, contentDescription = "Add")
             }
             FilledIconButton(
-                onClick = {
-                    productVm.decreaseCount(product.id)
-                },
+                onClick = { productVm.decreaseCount(product.id) },
                 colors = IconButtonDefaults.filledIconButtonColors(
                     containerColor = Color.Red,
                     contentColor = Color.White
@@ -137,8 +149,6 @@ fun ProductItem(product: ProductEntity, productVm: ProductVm) {
             ) {
                 Icon(Icons.Default.Remove, contentDescription = "Remove")
             }
-
-
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 Text(text = "Count")
                 Text(
@@ -146,9 +156,69 @@ fun ProductItem(product: ProductEntity, productVm: ProductVm) {
                     style = MaterialTheme.typography.titleMedium
                 )
             }
-
         }
     }
 }
 
-//fare report con diff prima e dopo dei count
+@Composable
+fun ChangesSummary(
+    pendingChanges: Map<Long, PendingChange>,
+    onSave: () -> Unit,
+    onClear: () -> Unit,
+    isSaveEnabled: Boolean,
+    isClearEnabled: Boolean,
+    modifier: Modifier = Modifier
+) {
+    Card(
+        modifier = modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(
+            containerColor = Color.DarkGray
+        )
+    ) {
+        Column(
+            modifier = Modifier
+                .padding(16.dp)
+        ) {
+            Text(
+                "Changes to Apply",
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold,
+                color = Color.White
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            pendingChanges.values.forEach { change ->
+                val action = if (change.delta > 0) "Added" else "Removed"
+                val delta = if (change.delta > 0) change.delta else -change.delta
+                val color = if (change.delta > 0) Color.Green else Color.Red
+
+                Text(
+                    text = "$action $delta: ${change.title}",
+                    color = color,
+                    style = MaterialTheme.typography.bodyMedium
+                )
+            }
+
+            // Pulsanti in basso a destra
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 16.dp),
+                horizontalArrangement = Arrangement.End
+            ) {
+                Button(
+                    onClick = onClear,
+                    enabled = isClearEnabled,
+                    modifier = Modifier.padding(end = 8.dp)
+                ) {
+                    Text("Clear")
+                }
+                Button(
+                    onClick = onSave,
+                    enabled = isSaveEnabled
+                ) {
+                    Text("Save")
+                }
+            }
+        }
+    }
+}
