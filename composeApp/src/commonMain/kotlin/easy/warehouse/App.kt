@@ -80,7 +80,11 @@ fun App() {
                     isAdmin = false
                 }
             }) {
-                Text("Login")
+                if(isAdmin) {
+                    Text("Logout")
+                }else {
+                    Text("Login")
+                }
             }
             if (!showLoginScreen) {
                 WarehouseScreen()
