@@ -41,6 +41,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -49,7 +50,14 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.key.Key
+import androidx.compose.ui.input.key.KeyEventType
+import androidx.compose.ui.input.key.key
+import androidx.compose.ui.input.key.onPreviewKeyEvent
+import androidx.compose.ui.input.key.type
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.times
@@ -286,8 +294,6 @@ fun ProductItem(product: ProductEntity, productVm: ProductVm) {
                     contentColor = Color.White
                 )
             ) {
-                Icon(Icons.Default.AddShoppingCart, contentDescription = "Prendi")
-                Spacer(modifier = Modifier.width(8.dp))
                 Text("Prendi")
             }
 
@@ -298,8 +304,6 @@ fun ProductItem(product: ProductEntity, productVm: ProductVm) {
                     contentColor = Color.White
                 )
             ) {
-                Icon(Icons.Default.RemoveShoppingCart, contentDescription = "Lascia")
-                Spacer(modifier = Modifier.width(8.dp))
                 Text("Lascia")
             }
         }
@@ -398,7 +402,7 @@ fun DestinationSelection(
             items = vehicles,
             selectedItem = selectedVehicle,
             onItemSelected = onVehicleSelected,
-            itemText = { it.vehicleName },
+            itemText = { it.vehicleName + " - (${it.vehiclePlate}) " },
             label = "Seleziona Veicolo"
         )
     }
@@ -415,6 +419,14 @@ fun <T> GenericExposedDropdownMenu(
     modifier: Modifier = Modifier,
 ) {
     var expanded by remember { mutableStateOf(false) }
+    var searchQuery by remember { mutableStateOf("") }
+
+    val filteredItems = remember(items, searchQuery) {
+        if (searchQuery.isBlank()) items
+        else items.filter { itemText(it).contains(searchQuery, ignoreCase = true) }
+    }
+
+    val searchFocusRequester = remember { FocusRequester() }
 
     ExposedDropdownMenuBox(
         expanded = expanded,
@@ -423,23 +435,46 @@ fun <T> GenericExposedDropdownMenu(
     ) {
         TextField(
             readOnly = true,
-            value = selectedItem?.let(itemText) ?: label,
+            value = selectedItem?.let(itemText) ?: "",
             onValueChange = {},
             label = { Text(label) },
             trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
             colors = ExposedDropdownMenuDefaults.textFieldColors(),
             modifier = Modifier.menuAnchor()
         )
+
         ExposedDropdownMenu(
             expanded = expanded,
-            onDismissRequest = { expanded = false }
+            onDismissRequest = {
+                expanded = false
+                searchQuery = ""
+            }
         ) {
-            items.forEach { item ->
+            // Focus automatico sulla searchbar
+            LaunchedEffect(expanded) {
+                if (expanded) {
+                    searchFocusRequester.requestFocus()
+                }
+            }
+
+            TextField(
+                value = searchQuery,
+                onValueChange = { searchQuery = it },
+                placeholder = { Text("Cerca...") },
+                singleLine = true,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(8.dp)
+                    .focusRequester(searchFocusRequester)
+            )
+
+            filteredItems.forEachIndexed { index, item ->
                 DropdownMenuItem(
                     text = { Text(itemText(item)) },
                     onClick = {
                         onItemSelected(item)
                         expanded = false
+                        searchQuery = ""
                     },
                     contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding
                 )
@@ -447,6 +482,7 @@ fun <T> GenericExposedDropdownMenu(
         }
     }
 }
+
 
 @Composable
 fun SearchBar(
