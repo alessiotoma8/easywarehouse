@@ -223,6 +223,12 @@ fun WarehouseScreen() {
                             onQueryChange = { productVm.updateSearch(it) }
                         )
                         ProductFilterChips(productVm)
+                        Text(
+                            text = "Prodotti trovati: (${products.size})",
+                            style = MaterialTheme.typography.titleMedium,
+                            color = MaterialTheme.colorScheme.onBackground,
+                            modifier = Modifier.fillMaxWidth()
+                        )
                     }
                 }
 
