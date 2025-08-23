@@ -152,7 +152,11 @@ fun WarehouseScreen() {
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(8.dp),
-                contentPadding = PaddingValues(bottom = products.size / 3 * 100.dp),
+                contentPadding = PaddingValues(
+                    bottom = products.size / 3 * 100.dp,
+                    start = 8.dp,
+                    end = 8.dp
+                ),
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
@@ -212,7 +216,7 @@ fun WarehouseScreen() {
 
                 item(span = { GridItemSpan(this.maxLineSpan) }) {
                     val searchQuery by productVm.searchQuery.collectAsStateWithLifecycle("")
-                    Column {
+                    Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
                         SearchBar(
                             query = searchQuery,
                             onQueryChange = { productVm.updateSearch(it) }
@@ -535,14 +539,22 @@ fun ProductFilterChips(
         FilterChip(
             selected = selectedUtilities == null,
             onClick = { productVm.toggleUtilityFilter(null) },
-            label = { Text("Tutti") }
+            label = {
+                Text(text = "Tutti".uppercase(), style = MaterialTheme.typography.titleMedium)
+            }
         )
         allUtilities.forEach { utility ->
-            val isSelected =  selectedUtilities == utility
+            val isSelected = selectedUtilities == utility
             FilterChip(
+                modifier = Modifier.weight(1f),
                 selected = isSelected,
                 onClick = { productVm.toggleUtilityFilter(utility) },
-                label = { Text(utility.displayName) }
+                label = {
+                    Text(
+                        text = utility.displayName.uppercase(),
+                        style = MaterialTheme.typography.titleMedium
+                    )
+                }
             )
         }
     }

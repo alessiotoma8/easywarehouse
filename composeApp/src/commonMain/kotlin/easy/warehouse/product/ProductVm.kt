@@ -65,6 +65,7 @@ class ProductVm : ViewModel() {
         )
 
     fun updateSearch(str: String) = viewModelScope.launch {
+        _selectedUtility.value = null
         _searchQuery.value = str
     }
 
