@@ -3,10 +3,12 @@ package easy.warehouse.product
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import easy.warehouse.db.getRoomDatabase
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.channelFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -28,6 +30,8 @@ class ProductVm : ViewModel() {
     private val _pendingChanges = MutableStateFlow<Map<Long, PendingChange>>(emptyMap())
     val pendingChanges: StateFlow<Map<Long, PendingChange>> = _pendingChanges.asStateFlow()
 
+    private val _searchQuery = MutableStateFlow("")
+    val searchQuery = _searchQuery.asStateFlow()
 
     val displayProducts: StateFlow<List<ProductEntity>> =
         combine(products, pendingChanges) { dbProducts, changes ->
@@ -46,6 +50,10 @@ class ProductVm : ViewModel() {
             started = SharingStarted.WhileSubscribed(5000),
             initialValue = emptyList()
         )
+
+    fun updateSearch(str: String) = viewModelScope.launch {
+        _searchQuery.value = str
+    }
 
     fun saveChanges() = viewModelScope.launch {
         _pendingChanges.value.values.forEach { change ->
@@ -89,7 +97,8 @@ class ProductVm : ViewModel() {
 
     // Diminuisce il conteggio in sospeso
     fun decreaseCount(productId: Long) = viewModelScope.launch {
-        val currentCount = _pendingChanges.value[productId]?.pendingCount ?: dbRepo.getById(productId)?.count
+        val currentCount =
+            _pendingChanges.value[productId]?.pendingCount ?: dbRepo.getById(productId)?.count
         if (currentCount != null && currentCount > 0) {
             updatePendingCount(productId, -1)
         }

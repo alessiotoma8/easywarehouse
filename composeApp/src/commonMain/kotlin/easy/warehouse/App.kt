@@ -1,7 +1,6 @@
 package easy.warehouse
 
 import LoginScreen
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -23,7 +22,9 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Remove
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DropdownMenuItem
@@ -34,14 +35,19 @@ import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
+import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -60,18 +66,22 @@ import easy.warehouse.employee.EmployeeVm
 import easy.warehouse.product.PendingChange
 import easy.warehouse.product.ProductEntity
 import easy.warehouse.product.ProductVm
+import kotlinx.coroutines.flow.consumeAsFlow
+import kotlinx.coroutines.launch
 import org.jetbrains.compose.ui.tooling.preview.Preview
 
 private val accountManager = AccountManager()
 private val DarkGreen = Color(0xFF006400)
 private val DarkRed = Color(0xFF8B0000)
+
 @Composable
 @Preview
 fun App() {
     MaterialTheme(
         colorScheme = MaterialTheme.colorScheme.copy(
             primary = Color.Blue
-        )
+        ),
+        shapes = MaterialTheme.shapes.copy(extraSmall = RoundedCornerShape(16.dp))
     ) {
         Column(
             modifier = Modifier
@@ -83,23 +93,23 @@ fun App() {
             var isAdmin by remember { mutableStateOf(false) }
             Button(onClick = {
                 showLoginScreen = !showLoginScreen
-                if(!showLoginScreen){
+                if (!showLoginScreen) {
                     isAdmin = false
                 }
             }) {
-                if(isAdmin) {
-                    Text("Logout")
-                }else {
-                    Text("Login")
+                if (isAdmin) {
+                    Text("Esci")
+                } else {
+                    Text("Accedi")
                 }
             }
             if (!showLoginScreen) {
                 WarehouseScreen()
-            } else if(!isAdmin){
+            } else if (!isAdmin) {
                 LoginScreen { us, pwd ->
                     isAdmin = accountManager.login(us, pwd)
                 }
-            }else {
+            } else {
                 AdminScreen()
             }
         }
@@ -121,12 +131,17 @@ fun WarehouseScreen() {
     val vehicles by vehicleVm.vehicles.collectAsStateWithLifecycle(emptyList())
     var selectedVehicle by remember { mutableStateOf<VehicleDestinationEntity?>(null) }
 
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    val coroutineScope = rememberCoroutineScope()
+
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Warehouse") }
+                title = { Text("Magazzino") }
             )
-        }
+        },
+        snackbarHost = { SnackbarHost(snackbarHostState) }
     ) { innerPadding ->
         Box(
             modifier = Modifier
@@ -139,7 +154,7 @@ fun WarehouseScreen() {
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(8.dp),
-                contentPadding = PaddingValues(bottom = products.size/3 * 100.dp),
+                contentPadding = PaddingValues(bottom = products.size / 3 * 100.dp),
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
@@ -155,8 +170,9 @@ fun WarehouseScreen() {
                         ) {
                             Text(
                                 "Utente",
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.Bold
+                                style = MaterialTheme.typography.titleLarge,
+                                fontWeight = FontWeight.Bold,
+                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 16.dp)
                             )
                             Spacer(modifier = Modifier.height(8.dp))
                             UserSelection(
@@ -170,8 +186,9 @@ fun WarehouseScreen() {
                         ) {
                             Text(
                                 "Destinazione",
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.Bold
+                                style = MaterialTheme.typography.titleLarge,
+                                fontWeight = FontWeight.Bold,
+                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 16.dp)
                             )
                             Spacer(modifier = Modifier.height(8.dp))
                             DestinationSelection(
@@ -191,14 +208,25 @@ fun WarehouseScreen() {
                         fontWeight = FontWeight.Bold,
                         modifier = Modifier
                             .fillMaxWidth()
-                            .background(MaterialTheme.colorScheme.surface)
                             .padding(horizontal = 8.dp, vertical = 16.dp)
+                    )
+                }
+
+                item(span = { GridItemSpan(this.maxLineSpan) }) {
+                    val searchQuery by productVm.searchQuery.collectAsStateWithLifecycle("")
+                    SearchBar(
+                        query = searchQuery,
+                        onQueryChange = { productVm.updateSearch(it) }
                     )
                 }
 
                 // Griglia di prodotti
                 items(products) { product ->
-                    ProductItem(product, productVm)
+                    Card(
+                        modifier = Modifier.widthIn(min = 200.dp, max = 400.dp)
+                    ) {
+                        ProductItem(product, productVm)
+                    }
                 }
             }
 
@@ -206,7 +234,12 @@ fun WarehouseScreen() {
             if (pendingChanges.isNotEmpty()) {
                 ChangesSummary(
                     pendingChanges = pendingChanges,
-                    onSave = { productVm.saveChanges() },
+                    onSave = {
+                        productVm.saveChanges()
+                        coroutineScope.launch {
+                            snackbarHostState.showSnackbar("Magazzino aggiornato con successo")
+                        }
+                    },
                     onClear = { productVm.clearChanges() },
                     isSaveEnabled = selectedEmployee != null && selectedVehicle != null,
                     isClearEnabled = pendingChanges.isNotEmpty(),
@@ -222,16 +255,13 @@ fun WarehouseScreen() {
 @Composable
 fun ProductItem(product: ProductEntity, productVm: ProductVm) {
     Row(
-        modifier = Modifier
-            .widthIn(min = 200.dp, max = 400.dp)
-            .padding(12.dp)
-            .clip(RoundedCornerShape(12.dp))
-            .background(MaterialTheme.colorScheme.surfaceVariant)
-            .padding(12.dp),
+        modifier = Modifier.padding(16.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Column {
+        Column(
+            modifier = Modifier.weight(1f)
+        ) {
             Text(product.title, style = MaterialTheme.typography.titleMedium)
             Text(product.content, style = MaterialTheme.typography.bodyMedium)
         }
@@ -246,7 +276,7 @@ fun ProductItem(product: ProductEntity, productVm: ProductVm) {
                     contentColor = Color.White
                 )
             ) {
-                Icon(Icons.Default.Add, contentDescription = "Add")
+                Icon(Icons.Default.Add, contentDescription = "Aggiungi")
             }
             FilledIconButton(
                 onClick = { productVm.decreaseCount(product.id) },
@@ -255,10 +285,10 @@ fun ProductItem(product: ProductEntity, productVm: ProductVm) {
                     contentColor = Color.White
                 )
             ) {
-                Icon(Icons.Default.Remove, contentDescription = "Remove")
+                Icon(Icons.Default.Remove, contentDescription = "Rimuovi")
             }
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Text(text = "Count")
+                Text(text = "Conteggio")
                 Text(
                     text = product.count.toString(),
                     style = MaterialTheme.typography.titleMedium
@@ -280,23 +310,23 @@ fun ChangesSummary(
     Card(
         modifier = modifier.width(300.dp),
         colors = CardDefaults.cardColors(
-            containerColor = Color.Gray
+            containerColor = Color.DarkGray
         )
     ) {
         Column(
             modifier = Modifier.padding(16.dp)
         ) {
             Text(
-                "Changes to Apply",
+                "Modifiche da Applicare",
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Bold,
                 color = Color.White
             )
             Spacer(modifier = Modifier.height(8.dp))
             pendingChanges.values.forEach { change ->
-                val action = if (change.delta > 0) "Added" else "Removed"
+                val action = if (change.delta > 0) "Aggiunto" else "Rimosso"
                 val delta = if (change.delta > 0) change.delta else -change.delta
-                val color = if (change.delta > 0) DarkGreen else DarkRed
+                val color = if (change.delta > 0) Color.Green else Color.Red
 
                 Text(
                     text = "$action $delta: ${change.title}",
@@ -316,14 +346,14 @@ fun ChangesSummary(
                     enabled = isClearEnabled,
                     modifier = Modifier.padding(end = 8.dp)
                 ) {
-                    Text("Clear")
+                    Text("Cancella")
                 }
-                Button(
-                    onClick = onSave,
-                    enabled = isSaveEnabled
-                ) {
-                    Text("Save")
-                }
+                    Button(
+                        onClick = onSave,
+                        enabled = isSaveEnabled
+                    ) {
+                        Text("Salva")
+                    }
             }
         }
     }
@@ -342,7 +372,7 @@ fun UserSelection(
             selectedItem = selectedEmployee,
             onItemSelected = onEmployeeSelected,
             itemText = { "${it.name} ${it.surname}" },
-            label = "Select User"
+            label = "Seleziona Utente"
         )
     }
 }
@@ -360,7 +390,7 @@ fun DestinationSelection(
             selectedItem = selectedVehicle,
             onItemSelected = onVehicleSelected,
             itemText = { it.vehicleName },
-            label = "Select Vehicle"
+            label = "Seleziona Veicolo"
         )
     }
 }
@@ -372,7 +402,7 @@ fun <T> GenericExposedDropdownMenu(
     selectedItem: T?,
     onItemSelected: (T) -> Unit,
     itemText: (T) -> String,
-    label: String = "Select Item",
+    label: String = "Seleziona Elemento",
     modifier: Modifier = Modifier,
 ) {
     var expanded by remember { mutableStateOf(false) }
@@ -380,7 +410,7 @@ fun <T> GenericExposedDropdownMenu(
     ExposedDropdownMenuBox(
         expanded = expanded,
         onExpandedChange = { expanded = !expanded },
-        modifier = modifier
+        modifier = modifier.clip(MaterialTheme.shapes.extraSmall),
     ) {
         TextField(
             readOnly = true,
@@ -407,4 +437,29 @@ fun <T> GenericExposedDropdownMenu(
             }
         }
     }
+}
+
+@Composable
+fun SearchBar(
+    query: String,
+    onQueryChange: (String) -> Unit,
+    modifier: Modifier = Modifier,
+    placeholder: String = "Cerca..."
+) {
+    TextField(
+        value = query,
+        onValueChange = onQueryChange,
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(8.dp),
+        placeholder = { Text(placeholder) },
+        singleLine = true,
+        leadingIcon = {
+            Icon(
+                imageVector = Icons.Default.Search,
+                contentDescription = "Search Icon"
+            )
+        },
+        shape = RoundedCornerShape(12.dp)
+    )
 }
