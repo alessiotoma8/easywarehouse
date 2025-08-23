@@ -34,16 +34,20 @@ class ProductVm : ViewModel() {
     val searchQuery = _searchQuery.asStateFlow()
 
     val displayProducts: StateFlow<List<ProductEntity>> =
-        combine(products, pendingChanges) { dbProducts, changes ->
-            dbProducts.map { product ->
+        combine(products, pendingChanges, searchQuery) { dbProducts, changes, query ->
+            val updatedProducts = dbProducts.map { product ->
                 val pendingChange = changes[product.id]
                 if (pendingChange != null) {
-                    // Se ci sono modifiche, crea un nuovo ProductEntity con il conteggio aggiornato
                     product.copy(count = pendingChange.pendingCount)
                 } else {
-                    // Altrimenti, usa il prodotto dal database
                     product
                 }
+            }
+
+            if (query.isBlank()) {
+                updatedProducts
+            } else {
+                updatedProducts.filter { it.title.contains(query, ignoreCase = true) }
             }
         }.stateIn(
             scope = viewModelScope,
