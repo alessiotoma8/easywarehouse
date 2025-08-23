@@ -1,12 +1,40 @@
 package easy.warehouse.admin
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AddCircle
 import androidx.compose.material.icons.filled.RemoveCircle
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.Button
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExposedDropdownMenuBox
+import androidx.compose.material3.ExposedDropdownMenuDefaults
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Tab
+import androidx.compose.material3.TabRow
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
+import androidx.compose.material3.TopAppBar
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -14,12 +42,14 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import easy.warehouse.GenericExposedDropdownMenu
 import easy.warehouse.destination.VehicleDestinationEntity
 import easy.warehouse.destination.VehicleVm
 import easy.warehouse.employee.EmployeeEntity
 import easy.warehouse.employee.EmployeeVm
 import easy.warehouse.product.ProductEntity
 import easy.warehouse.product.ProductVm
+import easy.warehouse.product.Utility
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.ui.tooling.preview.Preview
 
@@ -100,6 +130,7 @@ fun AdminScreen() {
                         2 -> ProductAddSection(snackbarHostState)
                     }
                 }
+
                 1 -> {
                     when (selectedTabIndex) {
                         0 -> UserRemoveSection(snackbarHostState)
@@ -211,6 +242,7 @@ fun ProductAddSection(snackbarHostState: SnackbarHostState) {
     var title by remember { mutableStateOf("") }
     var content by remember { mutableStateOf("") }
     var count by remember { mutableStateOf("") }
+    var utility by remember { mutableStateOf<Utility?>(null) }
     val coroutineScope = rememberCoroutineScope()
 
     Column(
@@ -239,12 +271,22 @@ fun ProductAddSection(snackbarHostState: SnackbarHostState) {
             label = { Text("Quantità") },
             modifier = Modifier.widthIn(max = 400.dp).fillMaxWidth()
         )
+
+        GenericExposedDropdownMenu(
+            items = Utility.values().toList(),
+            selectedItem = utility,
+            onItemSelected = { utility = it },
+            itemText = { "${it.displayName} "},
+            label = "Seleziona Settore"
+        )
+
+
         Button(
             onClick = {
-                if (title.isNotBlank() && content.isNotBlank() && count.isNotBlank()) {
+                if (title.isNotBlank() && content.isNotBlank() && count.isNotBlank() && utility != null) {
                     productVm.insertProduct(
                         ProductEntity(
-                            title = title, content = content, count = count.toIntOrNull() ?: 0
+                            title = title, content = content, count = count.toIntOrNull() ?: 0, utility = utility ?: Utility.ALTRI
                         )
                     )
                     title = ""

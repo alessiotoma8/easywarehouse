@@ -265,8 +265,9 @@ fun ProductItem(product: ProductEntity, productVm: ProductVm) {
             Column(
                 modifier = Modifier.weight(1f)
             ) {
-                Text(product.title, style = MaterialTheme.typography.titleMedium)
-                Text(product.content, style = MaterialTheme.typography.bodyMedium)
+                Text(product.title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                Text(product.content, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold)
+                Text(product.utility.displayName, style = MaterialTheme.typography.bodySmall)
             }
 
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
