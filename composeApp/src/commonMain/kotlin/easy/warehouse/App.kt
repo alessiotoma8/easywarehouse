@@ -5,6 +5,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -15,6 +16,7 @@ import androidx.compose.foundation.layout.safeContentPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -47,6 +49,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.times
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import easy.warehouse.admin.AdminScreen
@@ -60,11 +63,16 @@ import easy.warehouse.product.ProductVm
 import org.jetbrains.compose.ui.tooling.preview.Preview
 
 private val accountManager = AccountManager()
-
+private val DarkGreen = Color(0xFF006400)
+private val DarkRed = Color(0xFF8B0000)
 @Composable
 @Preview
 fun App() {
-    MaterialTheme {
+    MaterialTheme(
+        colorScheme = MaterialTheme.colorScheme.copy(
+            primary = Color.Blue
+        )
+    ) {
         Column(
             modifier = Modifier
                 .safeContentPadding()
@@ -125,79 +133,87 @@ fun WarehouseScreen() {
                 .padding(innerPadding)
                 .fillMaxSize()
         ) {
-            Column(
-                modifier = Modifier.fillMaxSize()
+            // Contenuto della griglia
+            LazyVerticalGrid(
+                columns = GridCells.Adaptive(minSize = 400.dp),
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(8.dp),
+                contentPadding = PaddingValues(bottom = products.size/3 * 100.dp),
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                Row(
-                    modifier = Modifier.fillMaxWidth().padding(8.dp),
-                    horizontalArrangement = Arrangement.spacedBy(16.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Column(
-                        modifier = Modifier.weight(1f)
+                // Selezioni Utente e Destinazione come elementi fissi
+                item {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(16.dp),
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text(
-                            "Utente",
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold
-                        )
-                        Spacer(modifier = Modifier.height(8.dp))
-                        UserSelection(
-                            employees = employees,
-                            selectedEmployee = selectedEmployee,
-                            onEmployeeSelected = { selectedEmployee = it }
-                        )
-                    }
-                    Column(
-                        modifier = Modifier.weight(1f)
-                    ) {
-                        Text(
-                            "Destinazione",
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold
-                        )
-                        Spacer(modifier = Modifier.height(8.dp))
-                        DestinationSelection(
-                            vehicles = vehicles,
-                            selectedVehicle = selectedVehicle,
-                            onVehicleSelected = { selectedVehicle = it }
-                        )
+                        Column(
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Text(
+                                "Utente",
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold
+                            )
+                            Spacer(modifier = Modifier.height(8.dp))
+                            UserSelection(
+                                employees = employees,
+                                selectedEmployee = selectedEmployee,
+                                onEmployeeSelected = { selectedEmployee = it }
+                            )
+                        }
+                        Column(
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Text(
+                                "Destinazione",
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold
+                            )
+                            Spacer(modifier = Modifier.height(8.dp))
+                            DestinationSelection(
+                                vehicles = vehicles,
+                                selectedVehicle = selectedVehicle,
+                                onVehicleSelected = { selectedVehicle = it }
+                            )
+                        }
                     }
                 }
 
-                Text(
-                    text = "Prodotti",
-                    style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .background(MaterialTheme.colorScheme.surface)
-                        .padding(horizontal = 8.dp, vertical = 16.dp)
-                )
-
-                LazyVerticalGrid(
-                    columns = GridCells.Adaptive(minSize = 400.dp),
-                    modifier = Modifier
-                        .padding(8.dp)
-                        .weight(1f),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    items(products) { product ->
-                        ProductItem(product, productVm)
-                    }
-                }
-
-                if (pendingChanges.isNotEmpty()) {
-                    ChangesSummary(
-                        pendingChanges = pendingChanges,
-                        onSave = { productVm.saveChanges() },
-                        onClear = { productVm.clearChanges() },
-                        isSaveEnabled = selectedEmployee != null && selectedVehicle != null,
-                        isClearEnabled = pendingChanges.isNotEmpty(),
-                        modifier = Modifier.align(Alignment.End),
+                // Titolo "Prodotti" come elemento fisso
+                item(span = { GridItemSpan(this.maxLineSpan) }) {
+                    Text(
+                        text = "Prodotti",
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .background(MaterialTheme.colorScheme.surface)
+                            .padding(horizontal = 8.dp, vertical = 16.dp)
                     )
                 }
+
+                // Griglia di prodotti
+                items(products) { product ->
+                    ProductItem(product, productVm)
+                }
+            }
+
+            // Card delle modifiche posizionata come overlay
+            if (pendingChanges.isNotEmpty()) {
+                ChangesSummary(
+                    pendingChanges = pendingChanges,
+                    onSave = { productVm.saveChanges() },
+                    onClear = { productVm.clearChanges() },
+                    isSaveEnabled = selectedEmployee != null && selectedVehicle != null,
+                    isClearEnabled = pendingChanges.isNotEmpty(),
+                    modifier = Modifier
+                        .align(Alignment.BottomEnd)
+                        .padding(16.dp)
+                )
             }
         }
     }
@@ -226,7 +242,7 @@ fun ProductItem(product: ProductEntity, productVm: ProductVm) {
             FilledIconButton(
                 onClick = { productVm.increaseCount(product.id) },
                 colors = IconButtonDefaults.filledIconButtonColors(
-                    containerColor = Color.Green,
+                    containerColor = DarkGreen,
                     contentColor = Color.White
                 )
             ) {
@@ -235,7 +251,7 @@ fun ProductItem(product: ProductEntity, productVm: ProductVm) {
             FilledIconButton(
                 onClick = { productVm.decreaseCount(product.id) },
                 colors = IconButtonDefaults.filledIconButtonColors(
-                    containerColor = Color.Red,
+                    containerColor = DarkRed,
                     contentColor = Color.White
                 )
             ) {
@@ -264,7 +280,7 @@ fun ChangesSummary(
     Card(
         modifier = modifier.width(300.dp),
         colors = CardDefaults.cardColors(
-            containerColor = Color.DarkGray
+            containerColor = Color.Gray
         )
     ) {
         Column(
@@ -280,7 +296,7 @@ fun ChangesSummary(
             pendingChanges.values.forEach { change ->
                 val action = if (change.delta > 0) "Added" else "Removed"
                 val delta = if (change.delta > 0) change.delta else -change.delta
-                val color = if (change.delta > 0) Color.Green else Color.Red
+                val color = if (change.delta > 0) DarkGreen else DarkRed
 
                 Text(
                     text = "$action $delta: ${change.title}",
@@ -319,7 +335,6 @@ fun UserSelection(
     selectedEmployee: EmployeeEntity?,
     onEmployeeSelected: (EmployeeEntity) -> Unit,
 ) {
-    val employeeVm = viewModel<EmployeeVm>()
     Row(verticalAlignment = Alignment.CenterVertically) {
         Spacer(modifier = Modifier.width(8.dp))
         GenericExposedDropdownMenu(

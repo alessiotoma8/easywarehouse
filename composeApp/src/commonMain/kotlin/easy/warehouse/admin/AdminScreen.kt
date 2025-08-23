@@ -20,6 +20,7 @@ import easy.warehouse.employee.EmployeeEntity
 import easy.warehouse.employee.EmployeeVm
 import easy.warehouse.product.ProductEntity
 import easy.warehouse.product.ProductVm
+import kotlinx.coroutines.launch
 import org.jetbrains.compose.ui.tooling.preview.Preview
 
 data class TabAction(
@@ -41,12 +42,15 @@ fun AdminScreen() {
     var selectedTabIndex by remember { mutableStateOf(0) }
     val tabs = listOf("Utenti", "Veicoli", "Prodotti")
 
+    val snackbarHostState = remember { SnackbarHostState() }
+
     Scaffold(
         topBar = {
             TopAppBar(
                 title = { Text("Pannello di Amministrazione") }
             )
-        }
+        },
+        snackbarHost = { SnackbarHost(snackbarHostState) }
     ) { innerPadding ->
         Column(
             modifier = Modifier
@@ -92,16 +96,16 @@ fun AdminScreen() {
             when (selectedTabActionIndex) {
                 0 -> {
                     when (selectedTabIndex) {
-                        0 -> UserAddSection()
-                        1 -> VehicleAddSection()
-                        2 -> ProductAddSection()
+                        0 -> UserAddSection(snackbarHostState)
+                        1 -> VehicleAddSection(snackbarHostState)
+                        2 -> ProductAddSection(snackbarHostState)
                     }
                 }
                 1 -> {
                     when (selectedTabIndex) {
-                        0 -> UserRemoveSection()
-                        1 -> VehicleRemoveSection()
-                        2 -> ProductRemoveSection()
+                        0 -> UserRemoveSection(snackbarHostState)
+                        1 -> VehicleRemoveSection(snackbarHostState)
+                        2 -> ProductRemoveSection(snackbarHostState)
                     }
                 }
             }
@@ -111,10 +115,11 @@ fun AdminScreen() {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun UserAddSection() {
+fun UserAddSection(snackbarHostState: SnackbarHostState) {
     val employeeVm = viewModel<EmployeeVm>()
     var name by remember { mutableStateOf("") }
     var surname by remember { mutableStateOf("") }
+    val coroutineScope = rememberCoroutineScope()
 
     Column(
         modifier = Modifier
@@ -142,6 +147,9 @@ fun UserAddSection() {
                     employeeVm.addEmployee(name, surname)
                     name = ""
                     surname = ""
+                    coroutineScope.launch {
+                        snackbarHostState.showSnackbar("Utente aggiunto con successo!")
+                    }
                 }
             },
             enabled = name.isNotBlank() && surname.isNotBlank()
@@ -153,10 +161,11 @@ fun UserAddSection() {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun VehicleAddSection() {
+fun VehicleAddSection(snackbarHostState: SnackbarHostState) {
     val vehicleVm = viewModel<VehicleVm>()
     var vehiclePlate by remember { mutableStateOf("") }
     var vehicleName by remember { mutableStateOf("") }
+    val coroutineScope = rememberCoroutineScope()
 
     Column(
         modifier = Modifier
@@ -184,6 +193,9 @@ fun VehicleAddSection() {
                     vehicleVm.addVehicle(vehiclePlate, vehicleName)
                     vehiclePlate = ""
                     vehicleName = ""
+                    coroutineScope.launch {
+                        snackbarHostState.showSnackbar("Veicolo aggiunto con successo!")
+                    }
                 }
             },
             enabled = vehiclePlate.isNotBlank() && vehicleName.isNotBlank()
@@ -195,11 +207,12 @@ fun VehicleAddSection() {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ProductAddSection() {
+fun ProductAddSection(snackbarHostState: SnackbarHostState) {
     val productVm = viewModel<ProductVm>()
     var title by remember { mutableStateOf("") }
     var content by remember { mutableStateOf("") }
     var count by remember { mutableStateOf("") }
+    val coroutineScope = rememberCoroutineScope()
 
     Column(
         modifier = Modifier
@@ -238,6 +251,9 @@ fun ProductAddSection() {
                     title = ""
                     content = ""
                     count = ""
+                    coroutineScope.launch {
+                        snackbarHostState.showSnackbar("Prodotto aggiunto con successo!")
+                    }
                 }
             },
             enabled = title.isNotBlank() && content.isNotBlank() && count.toIntOrNull() != null
@@ -247,13 +263,13 @@ fun ProductAddSection() {
     }
 }
 
-// Sezioni di Rimozione (modificate per centrare il dropdown)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun UserRemoveSection() {
+fun UserRemoveSection(snackbarHostState: SnackbarHostState) {
     val employeeVm = viewModel<EmployeeVm>()
     val employees by employeeVm.employees.collectAsStateWithLifecycle(emptyList())
     var selectedEmployee by remember { mutableStateOf<EmployeeEntity?>(null) }
+    val coroutineScope = rememberCoroutineScope()
 
     Column(
         modifier = Modifier
@@ -269,17 +285,20 @@ fun UserRemoveSection() {
             onItemSelected = { selectedEmployee = it },
             itemText = { "${it.name} ${it.surname}" },
             label = "Seleziona Utente",
-            modifier = Modifier.widthIn(max = 400.dp) // Applica la larghezza massima
+            modifier = Modifier.widthIn(max = 400.dp)
         )
         Button(
             onClick = {
                 selectedEmployee?.let { employee ->
                     employeeVm.removeEmployee(employee.id)
                     selectedEmployee = null
+                    coroutineScope.launch {
+                        snackbarHostState.showSnackbar("Utente rimosso con successo!")
+                    }
                 }
             },
             enabled = selectedEmployee != null,
-            modifier = Modifier.widthIn(max = 400.dp) // Applica la larghezza massima anche al pulsante
+            modifier = Modifier.widthIn(max = 400.dp)
         ) {
             Text("Rimuovi Utente")
         }
@@ -288,10 +307,11 @@ fun UserRemoveSection() {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun VehicleRemoveSection() {
+fun VehicleRemoveSection(snackbarHostState: SnackbarHostState) {
     val vehicleVm = viewModel<VehicleVm>()
     val vehicles by vehicleVm.vehicles.collectAsStateWithLifecycle(emptyList())
     var selectedVehicle by remember { mutableStateOf<VehicleDestinationEntity?>(null) }
+    val coroutineScope = rememberCoroutineScope()
 
     Column(
         modifier = Modifier
@@ -314,6 +334,9 @@ fun VehicleRemoveSection() {
                 selectedVehicle?.let { vehicle ->
                     vehicleVm.removeVehicle(vehicle.vehiclePlate)
                     selectedVehicle = null
+                    coroutineScope.launch {
+                        snackbarHostState.showSnackbar("Veicolo rimosso con successo!")
+                    }
                 }
             },
             enabled = selectedVehicle != null,
@@ -326,10 +349,11 @@ fun VehicleRemoveSection() {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ProductRemoveSection() {
+fun ProductRemoveSection(snackbarHostState: SnackbarHostState) {
     val productVm = viewModel<ProductVm>()
     val products by productVm.displayProducts.collectAsStateWithLifecycle(emptyList())
     var selectedProduct by remember { mutableStateOf<ProductEntity?>(null) }
+    val coroutineScope = rememberCoroutineScope()
 
     Column(
         modifier = Modifier
@@ -352,6 +376,9 @@ fun ProductRemoveSection() {
                 selectedProduct?.let { product ->
                     productVm.removeProduct(product.id)
                     selectedProduct = null
+                    coroutineScope.launch {
+                        snackbarHostState.showSnackbar("Prodotto rimosso con successo!")
+                    }
                 }
             },
             enabled = selectedProduct != null,
@@ -362,7 +389,6 @@ fun ProductRemoveSection() {
     }
 }
 
-// Funzione generica per il dropdown (codice esistente)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun <T> GenericExposedDropdownMenu(
