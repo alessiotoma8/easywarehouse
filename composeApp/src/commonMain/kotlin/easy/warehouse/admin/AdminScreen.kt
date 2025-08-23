@@ -64,7 +64,7 @@ fun AdminScreen() {
                         onClick = { selectedTabActionIndex = index },
                         selectedContentColor = tabAction.color,
                         unselectedContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.background(Color.Transparent)
+                        modifier = Modifier.background(tabAction.color.copy(alpha = 0.2f))
                     ) {
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
@@ -109,7 +109,6 @@ fun AdminScreen() {
     }
 }
 
-// Sezioni di Aggiunta con i campi di testo centrati e di larghezza limitata
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun UserAddSection() {
@@ -248,7 +247,7 @@ fun ProductAddSection() {
     }
 }
 
-// Sezioni di Rimozione (non hanno subito modifiche)
+// Sezioni di Rimozione (modificate per centrare il dropdown)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun UserRemoveSection() {
@@ -269,7 +268,8 @@ fun UserRemoveSection() {
             selectedItem = selectedEmployee,
             onItemSelected = { selectedEmployee = it },
             itemText = { "${it.name} ${it.surname}" },
-            label = "Seleziona Utente"
+            label = "Seleziona Utente",
+            modifier = Modifier.widthIn(max = 400.dp) // Applica la larghezza massima
         )
         Button(
             onClick = {
@@ -278,7 +278,8 @@ fun UserRemoveSection() {
                     selectedEmployee = null
                 }
             },
-            enabled = selectedEmployee != null
+            enabled = selectedEmployee != null,
+            modifier = Modifier.widthIn(max = 400.dp) // Applica la larghezza massima anche al pulsante
         ) {
             Text("Rimuovi Utente")
         }
@@ -305,7 +306,8 @@ fun VehicleRemoveSection() {
             selectedItem = selectedVehicle,
             onItemSelected = { selectedVehicle = it },
             itemText = { it.vehicleName },
-            label = "Seleziona Veicolo"
+            label = "Seleziona Veicolo",
+            modifier = Modifier.widthIn(max = 400.dp)
         )
         Button(
             onClick = {
@@ -314,7 +316,8 @@ fun VehicleRemoveSection() {
                     selectedVehicle = null
                 }
             },
-            enabled = selectedVehicle != null
+            enabled = selectedVehicle != null,
+            modifier = Modifier.widthIn(max = 400.dp)
         ) {
             Text("Rimuovi Veicolo")
         }
@@ -341,7 +344,8 @@ fun ProductRemoveSection() {
             selectedItem = selectedProduct,
             onItemSelected = { selectedProduct = it },
             itemText = { it.title },
-            label = "Seleziona Prodotto"
+            label = "Seleziona Prodotto",
+            modifier = Modifier.widthIn(max = 400.dp)
         )
         Button(
             onClick = {
@@ -350,7 +354,8 @@ fun ProductRemoveSection() {
                     selectedProduct = null
                 }
             },
-            enabled = selectedProduct != null
+            enabled = selectedProduct != null,
+            modifier = Modifier.widthIn(max = 400.dp)
         ) {
             Text("Rimuovi Prodotto")
         }
@@ -372,7 +377,7 @@ fun <T> GenericExposedDropdownMenu(
     ExposedDropdownMenuBox(
         expanded = expanded,
         onExpandedChange = { expanded = !expanded },
-        modifier = modifier.widthIn(max = 400.dp).fillMaxWidth()
+        modifier = modifier
     ) {
         TextField(
             readOnly = true,
