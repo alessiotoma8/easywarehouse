@@ -30,6 +30,7 @@ import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -52,6 +53,14 @@ import easy.warehouse.product.Utility
 import easy.warehouse.ui.WAppBar
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.ui.tooling.preview.Preview
+
+// Definizione del modello di dato per un campo di input generico
+data class Field<T>(
+    val label: String,
+    val state: MutableState<T>,
+    val isRequired: Boolean = false,
+    val isEnabled: Boolean = true,
+)
 
 data class TabAction(
     val title: String,
@@ -148,12 +157,19 @@ fun AdminScreen() {
     }
 }
 
+// -------------------------------------------------------------------------------------------------
+// COMPONENTE GENERICO BASE PER L'AGGIUNTA DI ELEMENTI
+// -------------------------------------------------------------------------------------------------
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun UserAddSection(snackbarHostState: SnackbarHostState) {
-    val employeeVm = viewModel<EmployeeVm>()
-    var name by remember { mutableStateOf("") }
-    var surname by remember { mutableStateOf("") }
+fun BaseAddTab(
+    title: String,
+    fields: List<Field<String>>,
+    saveAction: () -> Unit,
+    saveButtonText: String,
+    snackbarHostState: SnackbarHostState,
+    snackbarMessage: String,
+) {
     val coroutineScope = rememberCoroutineScope()
 
     Column(
@@ -163,93 +179,100 @@ fun UserAddSection(snackbarHostState: SnackbarHostState) {
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        Text("Inserisci un nuovo Utente", style = MaterialTheme.typography.titleLarge)
-        OutlinedTextField(
-            value = name,
-            onValueChange = { name = it },
-            label = { Text("Nome") },
-            modifier = Modifier.widthIn(max = 400.dp).fillMaxWidth()
-        )
-        OutlinedTextField(
-            value = surname,
-            onValueChange = { surname = it },
-            label = { Text("Cognome") },
-            modifier = Modifier.widthIn(max = 400.dp).fillMaxWidth()
-        )
+        Text(title, style = MaterialTheme.typography.titleLarge)
+        fields.forEach { field ->
+            OutlinedTextField(
+                value = field.state.value,
+                onValueChange = { field.state.value = it },
+                label = { Text(field.label) },
+                modifier = Modifier.widthIn(max = 400.dp).fillMaxWidth()
+            )
+        }
         Button(
             onClick = {
-                if (name.isNotBlank() && surname.isNotBlank()) {
-                    employeeVm.addEmployee(name, surname)
-                    name = ""
-                    surname = ""
+                val allFieldsFilled = fields.all { !it.isRequired || it.state.value.isNotBlank() }
+                if (allFieldsFilled) {
+                    saveAction()
                     coroutineScope.launch {
-                        snackbarHostState.showSnackbar("Utente aggiunto con successo!")
+                        snackbarHostState.showSnackbar(snackbarMessage)
                     }
                 }
             },
-            enabled = name.isNotBlank() && surname.isNotBlank()
+            enabled = fields.all { !it.isRequired || it.state.value.isNotBlank() }
         ) {
-            Text("Aggiungi Utente")
+            Text(saveButtonText)
         }
     }
+}
+
+// -------------------------------------------------------------------------------------------------
+// RIFATTORIZZAZIONE DELLE SEZIONI ESISTENTI USANDO LA COMPOSABLE BASE
+// -------------------------------------------------------------------------------------------------
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun UserAddSection(snackbarHostState: SnackbarHostState) {
+    val employeeVm = viewModel<EmployeeVm>()
+    val nameState = remember { mutableStateOf("") }
+    val surnameState = remember { mutableStateOf("") }
+
+    val fields = listOf(
+        Field("Nome", nameState, isRequired = true),
+        Field("Cognome", surnameState, isRequired = true)
+    )
+
+    BaseAddTab(
+        title = "Inserisci un nuovo Utente",
+        fields = fields,
+        saveAction = {
+            employeeVm.addEmployee(nameState.value, surnameState.value)
+            nameState.value = ""
+            surnameState.value = ""
+        },
+        saveButtonText = "Aggiungi Utente",
+        snackbarHostState = snackbarHostState,
+        snackbarMessage = "Utente aggiunto con successo!"
+    )
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun VehicleAddSection(snackbarHostState: SnackbarHostState) {
     val vehicleVm = viewModel<VehicleVm>()
-    var vehiclePlate by remember { mutableStateOf("") }
-    var vehicleName by remember { mutableStateOf("") }
-    val coroutineScope = rememberCoroutineScope()
+    val vehiclePlateState = remember { mutableStateOf("") }
+    val vehicleNameState = remember { mutableStateOf("") }
 
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(16.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(16.dp)
-    ) {
-        Text("Inserisci un nuovo Veicolo", style = MaterialTheme.typography.titleLarge)
-        OutlinedTextField(
-            value = vehiclePlate,
-            onValueChange = { vehiclePlate = it },
-            label = { Text("Targa Veicolo") },
-            modifier = Modifier.widthIn(max = 400.dp).fillMaxWidth()
-        )
-        OutlinedTextField(
-            value = vehicleName,
-            onValueChange = { vehicleName = it },
-            label = { Text("Nome Veicolo") },
-            modifier = Modifier.widthIn(max = 400.dp).fillMaxWidth()
-        )
-        Button(
-            onClick = {
-                if (vehiclePlate.isNotBlank() && vehicleName.isNotBlank()) {
-                    vehicleVm.addVehicle(vehiclePlate, vehicleName)
-                    vehiclePlate = ""
-                    vehicleName = ""
-                    coroutineScope.launch {
-                        snackbarHostState.showSnackbar("Veicolo aggiunto con successo!")
-                    }
-                }
-            },
-            enabled = vehiclePlate.isNotBlank() && vehicleName.isNotBlank()
-        ) {
-            Text("Aggiungi Veicolo")
-        }
-    }
+    val fields = listOf(
+        Field("Targa Veicolo", vehiclePlateState, isRequired = true),
+        Field("Nome Veicolo", vehicleNameState, isRequired = true)
+    )
+
+    BaseAddTab(
+        title = "Inserisci un nuovo Veicolo",
+        fields = fields,
+        saveAction = {
+            vehicleVm.addVehicle(vehiclePlateState.value, vehicleNameState.value)
+            vehiclePlateState.value = ""
+            vehicleNameState.value = ""
+        },
+        saveButtonText = "Aggiungi Veicolo",
+        snackbarHostState = snackbarHostState,
+        snackbarMessage = "Veicolo aggiunto con successo!"
+    )
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProductAddSection(snackbarHostState: SnackbarHostState) {
     val productVm = viewModel<ProductVm>()
-    var title by remember { mutableStateOf("") }
-    var content by remember { mutableStateOf("") }
-    var count by remember { mutableStateOf("") }
+    val titleState = remember { mutableStateOf("") }
+    val contentState = remember { mutableStateOf("") }
+    val countState = remember { mutableStateOf("") }
     var utility by remember { mutableStateOf<Utility?>(null) }
     val coroutineScope = rememberCoroutineScope()
 
+
+    // Purtroppo per il dropdown la logica è più complessa e non si può generalizzare con i TextField
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -259,20 +282,26 @@ fun ProductAddSection(snackbarHostState: SnackbarHostState) {
     ) {
         Text("Inserisci un nuovo Prodotto", style = MaterialTheme.typography.titleLarge)
         OutlinedTextField(
-            value = title,
-            onValueChange = { title = it },
+            value = titleState.value,
+            onValueChange = { titleState.value = it },
             label = { Text("Titolo Prodotto") },
             modifier = Modifier.widthIn(max = 400.dp).fillMaxWidth()
         )
         OutlinedTextField(
-            value = content,
-            onValueChange = { content = it },
+            value = contentState.value,
+            onValueChange = { contentState.value = it },
             label = { Text("Descrizione") },
             modifier = Modifier.widthIn(max = 400.dp).fillMaxWidth()
         )
+
+
         OutlinedTextField(
-            value = count,
-            onValueChange = { count = it },
+            value = countState.value,
+            onValueChange = {
+                if(countState.value.toIntOrNull() != null) {
+                    countState.value = it
+                }
+            },
             label = { Text("Quantità") },
             modifier = Modifier.widthIn(max = 400.dp).fillMaxWidth()
         )
@@ -282,35 +311,40 @@ fun ProductAddSection(snackbarHostState: SnackbarHostState) {
             selectedItem = utility,
             onItemSelected = { utility = it },
             itemText = { "${it.displayName} " },
-            label = "Seleziona Settore"
+            label = "Seleziona Settore",
+            modifier = Modifier.widthIn(max = 400.dp).fillMaxWidth()
         )
 
 
         Button(
             onClick = {
-                if (title.isNotBlank() && content.isNotBlank() && count.isNotBlank() && utility != null) {
+                if (titleState.value.isNotBlank() && contentState.value.isNotBlank() && countState.value.isNotBlank() && utility != null) {
                     productVm.insertProduct(
                         ProductEntity(
-                            title = title,
-                            content = content,
-                            count = count.toIntOrNull() ?: 0,
+                            title = titleState.value,
+                            content = contentState.value,
+                            count = countState.value.toIntOrNull() ?: 0,
                             utility = utility ?: Utility.ALTRI
                         )
                     )
-                    title = ""
-                    content = ""
-                    count = ""
+                    titleState.value = ""
+                    contentState.value = ""
+                    countState.value = ""
+                    utility = null
                     coroutineScope.launch {
                         snackbarHostState.showSnackbar("Prodotto aggiunto con successo!")
                     }
                 }
             },
-            enabled = title.isNotBlank() && content.isNotBlank() && count.toIntOrNull() != null
+            enabled = titleState.value.isNotBlank() && contentState.value.isNotBlank() && countState.value.toIntOrNull() != null && utility != null,
         ) {
             Text("Aggiungi Prodotto")
         }
     }
 }
+// -------------------------------------------------------------------------------------------------
+// SEZIONI DI RIMOZIONE/MODIFICA (NON MODIFICATE)
+// -------------------------------------------------------------------------------------------------
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
