@@ -73,7 +73,7 @@ fun AdminScreen() {
     var selectedTabActionIndex by remember { mutableStateOf(0) }
     val actions = listOf(
         TabAction("Aggiungi", Icons.Default.AddCircle, Green2),
-        TabAction("Rimuovi", Icons.Default.RemoveCircle, Red2)
+        TabAction("Rimuovi/ Modifica", Icons.Default.RemoveCircle, Red2)
     )
 
     var selectedTabIndex by remember { mutableStateOf(0) }
