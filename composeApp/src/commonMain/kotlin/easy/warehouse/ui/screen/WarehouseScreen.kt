@@ -1,4 +1,4 @@
-package easy.warehouse.home
+package easy.warehouse.ui.screen
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -29,17 +29,19 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
-import easy.warehouse.components.ChangesSummary
-import easy.warehouse.components.DestinationSelection
-import easy.warehouse.components.ProductFilterChips
-import easy.warehouse.components.ProductItem
-import easy.warehouse.components.SearchBar
-import easy.warehouse.components.WAppBar
-import easy.warehouse.components.UserSelection
+import easy.warehouse.destination.VehicleDestinationEntity
 import easy.warehouse.destination.VehicleVm
 import easy.warehouse.employee.EmployeeEntity
 import easy.warehouse.employee.EmployeeVm
 import easy.warehouse.product.ProductVm
+import easy.warehouse.report.ReportVm
+import easy.warehouse.ui.ChangesSummary
+import easy.warehouse.ui.DestinationSelection
+import easy.warehouse.ui.ProductFilterChips
+import easy.warehouse.ui.ProductItem
+import easy.warehouse.ui.SearchBar
+import easy.warehouse.ui.UserSelection
+import easy.warehouse.ui.WAppBar
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -56,6 +58,8 @@ fun WarehouseScreen() {
     val vehicleVm = viewModel<VehicleVm>()
     val vehicles by vehicleVm.vehicles.collectAsStateWithLifecycle(emptyList())
     var selectedVehicle by remember { mutableStateOf<VehicleDestinationEntity?>(null) }
+
+    val reportVm = viewModel<ReportVm>()
 
     val snackbarHostState = remember { SnackbarHostState() }
     val coroutineScope = rememberCoroutineScope()
@@ -122,13 +126,27 @@ fun WarehouseScreen() {
                 ChangesSummary(
                     pendingChanges = pendingChanges,
                     onSave = {
-                        productVm.saveChanges()
-                        coroutineScope.launch {
-                            snackbarHostState.showSnackbar("Magazzino aggiornato con successo")
+                        selectedEmployee?.let { employee ->
+                            productVm.saveChanges()
+                            pendingChanges.values.forEach { change ->
+                                reportVm.createReport(
+                                    productId = change.productId,
+                                    employeeId = employee.id,
+                                    vehiclePlate = selectedVehicle?.vehiclePlate,
+                                    deltaProduct = change.delta
+                                )
+                            }
+                            coroutineScope.launch {
+                                snackbarHostState.showSnackbar("Magazzino aggiornato con successo")
+                            }
+                        }?: {
+                            coroutineScope.launch {
+                                snackbarHostState.showSnackbar("Seleziona utente prima di salvare")
+                            }
                         }
                     },
                     onClear = { productVm.clearChanges() },
-                    isSaveEnabled = selectedEmployee != null && selectedVehicle != null,
+                    isSaveEnabled = selectedEmployee != null,
                     isClearEnabled = pendingChanges.isNotEmpty(),
                     modifier = Modifier
                         .align(Alignment.BottomEnd)

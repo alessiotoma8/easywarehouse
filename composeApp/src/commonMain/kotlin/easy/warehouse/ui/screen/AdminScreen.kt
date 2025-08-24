@@ -1,4 +1,4 @@
-package easy.warehouse.admin
+package easy.warehouse.ui.screen
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -29,7 +29,6 @@ import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -43,10 +42,6 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
-import easy.warehouse.DarkGreen
-import easy.warehouse.DarkRed
-import easy.warehouse.GenericExposedDropdownMenu
-import easy.warehouse.WAppBar
 import easy.warehouse.destination.VehicleDestinationEntity
 import easy.warehouse.destination.VehicleVm
 import easy.warehouse.employee.EmployeeEntity
@@ -54,6 +49,7 @@ import easy.warehouse.employee.EmployeeVm
 import easy.warehouse.product.ProductEntity
 import easy.warehouse.product.ProductVm
 import easy.warehouse.product.Utility
+import easy.warehouse.ui.WAppBar
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.ui.tooling.preview.Preview
 

@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 1,
-    "identityHash": "aa09981f2391eff8c6f6d5b9a3319d25",
+    "identityHash": "0108f509e52f170ebd5867824bed735e",
     "entities": [
       {
         "tableName": "ProductEntity",
@@ -99,11 +99,87 @@
             "vehiclePlate"
           ]
         }
+      },
+      {
+        "tableName": "ReportEntity",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `date` TEXT NOT NULL, `time` TEXT NOT NULL, `employeeName` TEXT NOT NULL, `employeeSurname` TEXT NOT NULL, `productTitle` TEXT NOT NULL, `productDesc` TEXT NOT NULL, `productUtility` TEXT NOT NULL, `productCountChange` INTEGER NOT NULL, `vehiclePlate` TEXT, `vehicleName` TEXT)",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "date",
+            "columnName": "date",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "time",
+            "columnName": "time",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "employeeName",
+            "columnName": "employeeName",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "employeeSurname",
+            "columnName": "employeeSurname",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "productTitle",
+            "columnName": "productTitle",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "productDesc",
+            "columnName": "productDesc",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "productUtility",
+            "columnName": "productUtility",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "productCountChange",
+            "columnName": "productCountChange",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "vehiclePlate",
+            "columnName": "vehiclePlate",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "vehicleName",
+            "columnName": "vehicleName",
+            "affinity": "TEXT"
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "id"
+          ]
+        }
       }
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'aa09981f2391eff8c6f6d5b9a3319d25')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '0108f509e52f170ebd5867824bed735e')"
     ]
   }
 }

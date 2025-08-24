@@ -13,8 +13,9 @@ import easy.warehouse.product.Converters
 import easy.warehouse.product.ProductDao
 import easy.warehouse.product.ProductEntity
 import easy.warehouse.report.ReportDao
+import easy.warehouse.report.ReportEntity
 
-@Database(entities = [ProductEntity::class, EmployeeEntity::class, VehicleDestinationEntity::class], version = 1)
+@Database(entities = [ProductEntity::class, EmployeeEntity::class, VehicleDestinationEntity::class, ReportEntity::class], version = 1)
 @TypeConverters(Converters::class)
 @ConstructedBy(AppDatabaseConstructor::class)
 abstract class AppDatabase : RoomDatabase() {
