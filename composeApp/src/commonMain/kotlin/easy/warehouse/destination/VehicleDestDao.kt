@@ -13,4 +13,7 @@ interface VehicleDestDao {
 
     @Query("DELETE FROM VehicleDestinationEntity WHERE vehiclePlate = :vehiclePlate")
     suspend fun removeById(vehiclePlate: String)
+
+    @Query("SELECT * FROM VehicleDestinationEntity WHERE vehiclePlate = :vehiclePlate")
+    suspend fun getById(vehiclePlate: String): VehicleDestinationEntity?
 }

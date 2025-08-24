@@ -13,4 +13,7 @@ interface EmployeeDao {
 
     @Query("DELETE FROM EmployeeEntity WHERE id = :id")
     suspend fun removeById(id: Long)
+
+    @Query("SELECT * FROM EmployeeEntity WHERE id = :id")
+    suspend fun getById(id: Long): EmployeeEntity?
 }

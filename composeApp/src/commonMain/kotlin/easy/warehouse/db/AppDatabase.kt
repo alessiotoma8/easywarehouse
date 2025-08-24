@@ -12,6 +12,7 @@ import easy.warehouse.employee.EmployeeEntity
 import easy.warehouse.product.Converters
 import easy.warehouse.product.ProductDao
 import easy.warehouse.product.ProductEntity
+import easy.warehouse.report.ReportDao
 
 @Database(entities = [ProductEntity::class, EmployeeEntity::class, VehicleDestinationEntity::class], version = 1)
 @TypeConverters(Converters::class)
@@ -20,6 +21,7 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun getProductDao(): ProductDao
     abstract fun getEmployeeDao(): EmployeeDao
     abstract fun getDestinationDao(): VehicleDestDao
+    abstract fun getReportDao(): ReportDao
 }
 
 // The Room compiler generates the `actual` implementations.
