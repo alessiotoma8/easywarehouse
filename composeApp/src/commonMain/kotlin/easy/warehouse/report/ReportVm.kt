@@ -8,29 +8,53 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import kotlinx.datetime.DateTimePeriod
+import kotlinx.datetime.Instant
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.minus
+import kotlinx.datetime.toLocalDateTime
+import kotlin.collections.filter
+import kotlin.time.Clock
+import kotlin.time.ExperimentalTime
 
+@OptIn(ExperimentalTime::class)
 class ReportVm : ViewModel() {
     private val productRepo = getRoomDatabase().getProductDao()
     private val employeeRepo = getRoomDatabase().getEmployeeDao()
     private val vehicleRepo = getRoomDatabase().getDestinationDao()
     private val reportRepo = getRoomDatabase().getReportDao()
 
-    val reports = reportRepo.getAllReports()
+    private val _selectedDatePeriod = MutableStateFlow<DateTimePeriod?>(null)
+    val selectedDatePeriod = _selectedDatePeriod.asStateFlow()
+
+    val reports = reportRepo.getAllReports().combine(selectedDatePeriod){ reports, period->
+        period?.let {
+            val now = Clock.System.now()
+            val startInstant = now.minus(period, TimeZone.currentSystemDefault())
+            reports.filter { report ->
+                val reportInstant = report.getInstant()
+                reportInstant >= startInstant && reportInstant <= now
+            }
+        }?:reports
+    }
         .stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
 
+    @OptIn(ExperimentalTime::class)
     fun createReport(productId: Long, employeeId: Long, vehiclePlate: String?, deltaProduct: Int) =
         viewModelScope.launch {
             val product = productRepo.getById(productId)
             val employee = employeeRepo.getById(employeeId)
             val vehicle = vehiclePlate?.let { vehicleRepo.getById(it) }
 
+            val date = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())
             val report = ReportEntity(
-                date = ",",
-                time = ",",
+                date = date.date.toString(),
+                time = date.time.toString(),
                 employeeName = employee?.name.orEmpty(),
                 employeeSurname = employee?.surname.orEmpty(),
                 productTitle = product?.title.orEmpty(),

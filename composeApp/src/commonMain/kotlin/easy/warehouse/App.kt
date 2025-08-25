@@ -53,6 +53,7 @@ fun App() {
                         showLoginScreen = !showLoginScreen
                         if (!showLoginScreen) {
                             isAdmin = false
+                            showReport = false
                         }
                     }
                 ) {

@@ -40,6 +40,7 @@ kotlin {
             implementation(libs.androidx.activity.compose)
         }
         commonMain.dependencies {
+            implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.7.1")
             implementation(compose.runtime)
             implementation(compose.foundation)
             implementation(compose.material3)

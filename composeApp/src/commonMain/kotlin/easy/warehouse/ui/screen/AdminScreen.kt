@@ -298,9 +298,7 @@ fun ProductAddSection(snackbarHostState: SnackbarHostState) {
         OutlinedTextField(
             value = countState.value,
             onValueChange = {
-                if(countState.value.toIntOrNull() != null) {
-                    countState.value = it
-                }
+                countState.value = it
             },
             label = { Text("Quantità") },
             modifier = Modifier.widthIn(max = 400.dp).fillMaxWidth()

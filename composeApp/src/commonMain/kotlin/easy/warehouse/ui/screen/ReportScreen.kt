@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
@@ -32,6 +33,11 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import easy.warehouse.report.ReportEntity
 import easy.warehouse.report.ReportVm
+import easy.warehouse.report.getLocalDateTime
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toLocalDateTime
+import kotlin.time.ExperimentalTime
+import kotlin.time.Instant
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -45,8 +51,6 @@ fun ReportsScreen() {
         report.employeeName.lowercase().contains(query) ||
                 report.employeeSurname.lowercase().contains(query) ||
                 report.productTitle.lowercase().contains(query) ||
-                report.date.lowercase().contains(query) ||
-                report.time.lowercase().contains(query) ||
                 report.productDesc.lowercase().contains(query)
     }
 
@@ -59,15 +63,15 @@ fun ReportsScreen() {
     ) { paddingValues ->
         Column(
             modifier = Modifier
-                .fillMaxSize()
                 .padding(paddingValues)
-                .padding(horizontal = 8.dp)
+                .fillMaxWidth()
+                .padding(horizontal = 24.dp)
         ) {
             // Campo di ricerca
             OutlinedTextField(
                 value = searchQuery,
                 onValueChange = { searchQuery = it },
-                label = { Text("Cerca per nome, prodotto, data...") },
+                label = { Text("Cerca per nome, prodotto, dipendente ...") },
                 leadingIcon = { Icon(Icons.Default.Search, contentDescription = "Ricerca") },
                 singleLine = true,
                 modifier = Modifier
@@ -77,7 +81,7 @@ fun ReportsScreen() {
 
             // Intestazione della tabella
             LazyColumn(
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
             ) {
                 // Intestazione fissata in cima
                 stickyHeader {
@@ -109,6 +113,7 @@ fun ReportsHeader() {
     }
 }
 
+@OptIn(ExperimentalTime::class)
 @Composable
 fun ReportRow(report: ReportEntity) {
     Row(
@@ -117,7 +122,11 @@ fun ReportRow(report: ReportEntity) {
             .padding(vertical = 4.dp),
         horizontalArrangement = Arrangement.spacedBy(4.dp)
     ) {
-        Cell("${report.date}\n${report.time}", weight = 1f)
+        val reportDateTime = report.getLocalDateTime()
+        val formattedTime = "${reportDateTime.time.hour}:${reportDateTime.time.minute}"
+        val formattedDate = "${reportDateTime.date.dayOfMonth}/${reportDateTime.date.monthNumber}/${reportDateTime.date.year}"
+
+        Cell("$formattedDate\n$formattedTime", weight = 1f)
         Cell("${report.employeeName} ${report.employeeSurname}", weight = 1.5f)
         Cell(report.productTitle, weight = 2f)
         Cell(report.productCountChange.toString(), weight = 1f, alignRight = true)
