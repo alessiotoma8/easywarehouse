@@ -44,6 +44,19 @@ class ReportVm : ViewModel() {
     }
         .stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
 
+
+    suspend fun getUserInventory(employeeId: Long): Map<String, Int> {
+        val reports = reportRepo.getAllReportsByEmployee(employeeId)
+
+        return reports
+            .groupBy { it.productTitle }
+            .mapValues { (_, productReports) ->
+                productReports.sumOf { it.productCountChange }
+            }
+            .filterValues { it != 0 } // opzionale, mostra solo i prodotti che ha ancora
+    }
+
+
     @OptIn(ExperimentalTime::class)
     fun createReport(productId: Long, employeeId: Long, vehiclePlate: String?, deltaProduct: Int) =
         viewModelScope.launch {
@@ -67,4 +80,8 @@ class ReportVm : ViewModel() {
 
             reportRepo.insertReport(report)
         }
+
+    fun filterByDatePeriod(period: DateTimePeriod?) = viewModelScope.launch {
+        _selectedDatePeriod.emit(period)
+    }
 }

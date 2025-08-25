@@ -1,21 +1,17 @@
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Divider
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
@@ -26,7 +22,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -34,20 +29,29 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import easy.warehouse.report.ReportEntity
 import easy.warehouse.report.ReportVm
 import easy.warehouse.report.getLocalDateTime
-import kotlinx.datetime.TimeZone
-import kotlinx.datetime.toLocalDateTime
+import easy.warehouse.ui.SearchBar
+import kotlinx.datetime.DateTimePeriod
 import kotlin.time.ExperimentalTime
-import kotlin.time.Instant
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ReportsScreen() {
-    val reports by viewModel<ReportVm>().reports.collectAsStateWithLifecycle()
+    val reportVm = viewModel<ReportVm>()
+    val reports by reportVm.reports.collectAsStateWithLifecycle()
 
-    var searchQuery by remember { mutableStateOf(TextFieldValue("")) }
+    var searchQuery by remember { mutableStateOf("") }
+    val selectedDatePeriod by reportVm.selectedDatePeriod.collectAsStateWithLifecycle()
+
+    val dateTimeLabels = mapOf(
+        DateTimePeriod() to "Oggi",
+        DateTimePeriod(days = 1) to "Ieri",
+        DateTimePeriod(days = 7) to "Ultimi 7 giorni",
+        DateTimePeriod(months = 1) to "Ultimo mese",
+        DateTimePeriod(years = 1) to "Ultimo anno"
+    )
 
     val filteredReports = reports.filter { report ->
-        val query = searchQuery.text.lowercase()
+        val query = searchQuery.lowercase()
         report.employeeName.lowercase().contains(query) ||
                 report.employeeSurname.lowercase().contains(query) ||
                 report.productTitle.lowercase().contains(query) ||
@@ -65,35 +69,69 @@ fun ReportsScreen() {
             modifier = Modifier
                 .padding(paddingValues)
                 .fillMaxWidth()
-                .padding(horizontal = 24.dp)
+                .padding(horizontal = 24.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            // Campo di ricerca
-            OutlinedTextField(
-                value = searchQuery,
-                onValueChange = { searchQuery = it },
-                label = { Text("Cerca per nome, prodotto, dipendente ...") },
-                leadingIcon = { Icon(Icons.Default.Search, contentDescription = "Ricerca") },
-                singleLine = true,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 16.dp)
+
+        SearchBar(
+            query = searchQuery,
+            onQueryChange = { searchQuery = it },
+            placeholder = "Cerca per nome, prodotto, dipendente ..."
+        )
+
+        FlowRow(
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 4.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalArrangement = Arrangement.Center
+        ) {
+            FilterChip(
+                selected = selectedDatePeriod == null,
+                onClick = { reportVm.filterByDatePeriod(null) },
+                label = {
+                    Text(
+                        text = "Tutti".uppercase(),
+                        style = MaterialTheme.typography.titleLarge
+                    )
+                },
+                colors = androidx.compose.material3.FilterChipDefaults.filterChipColors(
+                    selectedContainerColor = MaterialTheme.colorScheme.primary,
+                    selectedLabelColor = MaterialTheme.colorScheme.onPrimary
+                )
             )
 
-            // Intestazione della tabella
-            LazyColumn(
-                modifier = Modifier.fillMaxWidth(),
-            ) {
-                // Intestazione fissata in cima
-                stickyHeader {
-                    ReportsHeader()
-                }
-
-                // Dati della tabella
-                items(filteredReports) { report ->
-                    ReportRow(report)
-                }
+            dateTimeLabels.keys.forEach { dateTimePeriod ->
+                FilterChip(
+                    selected = selectedDatePeriod == dateTimePeriod,
+                    onClick = { reportVm.filterByDatePeriod(dateTimePeriod) },
+                    label = {
+                        Text(
+                            text = dateTimeLabels[dateTimePeriod]?.uppercase() ?: "",
+                            style = MaterialTheme.typography.titleLarge
+                        )
+                    },
+                    colors = androidx.compose.material3.FilterChipDefaults.filterChipColors(
+                        selectedContainerColor = MaterialTheme.colorScheme.primary,
+                        selectedLabelColor = MaterialTheme.colorScheme.onPrimary
+                    )
+                )
             }
         }
+
+        // Intestazione della tabella
+        LazyColumn(
+            modifier = Modifier.fillMaxWidth(),
+        ) {
+            // Intestazione fissata in cima
+            stickyHeader {
+                ReportsHeader()
+            }
+
+            // Dati della tabella
+            items(filteredReports) { report ->
+                ReportRow(report)
+            }
+        }
+    }
     }
 }
 
@@ -124,7 +162,8 @@ fun ReportRow(report: ReportEntity) {
     ) {
         val reportDateTime = report.getLocalDateTime()
         val formattedTime = "${reportDateTime.time.hour}:${reportDateTime.time.minute}"
-        val formattedDate = "${reportDateTime.date.dayOfMonth}/${reportDateTime.date.monthNumber}/${reportDateTime.date.year}"
+        val formattedDate =
+            "${reportDateTime.date.dayOfMonth}/${reportDateTime.date.monthNumber}/${reportDateTime.date.year}"
 
         Cell("$formattedDate\n$formattedTime", weight = 1f)
         Cell("${report.employeeName} ${report.employeeSurname}", weight = 1.5f)

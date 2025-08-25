@@ -373,7 +373,7 @@ fun ProductFilterChips(
         modifier = modifier
             .fillMaxWidth()
             .padding(horizontal = 4.dp),
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        horizontalArrangement = Arrangement.spacedBy(16.dp),
         verticalArrangement = Arrangement.Center
     ) {
         FilterChip(
