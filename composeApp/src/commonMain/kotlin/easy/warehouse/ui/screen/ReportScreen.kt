@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
@@ -20,6 +21,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -29,7 +31,9 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import easy.warehouse.report.ReportEntity
 import easy.warehouse.report.ReportVm
 import easy.warehouse.report.getLocalDateTime
+import easy.warehouse.ui.ScreenContent
 import easy.warehouse.ui.SearchBar
+import easy.warehouse.ui.WAppBar
 import kotlinx.datetime.DateTimePeriod
 import kotlin.time.ExperimentalTime
 
@@ -44,7 +48,6 @@ fun ReportsScreen() {
 
     val dateTimeLabels = mapOf(
         DateTimePeriod() to "Oggi",
-        DateTimePeriod(days = 1) to "Ieri",
         DateTimePeriod(days = 7) to "Ultimi 7 giorni",
         DateTimePeriod(months = 1) to "Ultimo mese",
         DateTimePeriod(years = 1) to "Ultimo anno"
@@ -60,52 +63,27 @@ fun ReportsScreen() {
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = { Text("Report Magazzino") },
-            )
+            WAppBar("Report Magazzino")
         }
-    ) { paddingValues ->
-        Column(
-            modifier = Modifier
-                .padding(paddingValues)
-                .fillMaxWidth()
-                .padding(horizontal = 24.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-
-        SearchBar(
-            query = searchQuery,
-            onQueryChange = { searchQuery = it },
-            placeholder = "Cerca per nome, prodotto, dipendente ..."
-        )
-
-        FlowRow(
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 4.dp),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-            verticalArrangement = Arrangement.Center
-        ) {
-            FilterChip(
-                selected = selectedDatePeriod == null,
-                onClick = { reportVm.filterByDatePeriod(null) },
-                label = {
-                    Text(
-                        text = "Tutti".uppercase(),
-                        style = MaterialTheme.typography.titleLarge
-                    )
-                },
-                colors = androidx.compose.material3.FilterChipDefaults.filterChipColors(
-                    selectedContainerColor = MaterialTheme.colorScheme.primary,
-                    selectedLabelColor = MaterialTheme.colorScheme.onPrimary
-                )
+    ) { innerPadding ->
+        ScreenContent(innerPadding) {
+            SearchBar(
+                query = searchQuery,
+                onQueryChange = { searchQuery = it },
+                placeholder = "Cerca per nome, prodotto, dipendente ..."
             )
 
-            dateTimeLabels.keys.forEach { dateTimePeriod ->
+            FlowRow(
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 4.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalArrangement = Arrangement.Center
+            ) {
                 FilterChip(
-                    selected = selectedDatePeriod == dateTimePeriod,
-                    onClick = { reportVm.filterByDatePeriod(dateTimePeriod) },
+                    selected = selectedDatePeriod == null,
+                    onClick = { reportVm.filterByDatePeriod(null) },
                     label = {
                         Text(
-                            text = dateTimeLabels[dateTimePeriod]?.uppercase() ?: "",
+                            text = "Tutti".uppercase(),
                             style = MaterialTheme.typography.titleLarge
                         )
                     },
@@ -114,24 +92,46 @@ fun ReportsScreen() {
                         selectedLabelColor = MaterialTheme.colorScheme.onPrimary
                     )
                 )
+
+                dateTimeLabels.keys.forEach { dateTimePeriod ->
+                    FilterChip(
+                        selected = selectedDatePeriod == dateTimePeriod,
+                        onClick = { reportVm.filterByDatePeriod(dateTimePeriod) },
+                        label = {
+                            Text(
+                                text = dateTimeLabels[dateTimePeriod]?.uppercase() ?: "",
+                                style = MaterialTheme.typography.titleLarge
+                            )
+                        },
+                        colors = androidx.compose.material3.FilterChipDefaults.filterChipColors(
+                            selectedContainerColor = MaterialTheme.colorScheme.primary,
+                            selectedLabelColor = MaterialTheme.colorScheme.onPrimary
+                        )
+                    )
+                }
+            }
+
+
+            val inventory = reportVm.generateInventory(reports)
+
+            inventory.forEach {
+                Text("${it.employeeName} ${it.employeeSurname} ha ${it.totalCount} ${it.productTitle}")
+            }
+            // Intestazione della tabella
+            LazyColumn(
+                modifier = Modifier.fillMaxSize(),
+            ) {
+                // Intestazione fissata in cima
+                stickyHeader {
+                    ReportsHeader()
+                }
+
+                // Dati della tabella
+                items(filteredReports) { report ->
+                    ReportRow(report)
+                }
             }
         }
-
-        // Intestazione della tabella
-        LazyColumn(
-            modifier = Modifier.fillMaxWidth(),
-        ) {
-            // Intestazione fissata in cima
-            stickyHeader {
-                ReportsHeader()
-            }
-
-            // Dati della tabella
-            items(filteredReports) { report ->
-                ReportRow(report)
-            }
-        }
-    }
     }
 }
 

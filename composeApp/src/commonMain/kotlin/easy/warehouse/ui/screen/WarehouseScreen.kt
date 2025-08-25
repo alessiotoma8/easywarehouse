@@ -39,6 +39,7 @@ import easy.warehouse.ui.ChangesSummary
 import easy.warehouse.ui.DestinationSelection
 import easy.warehouse.ui.ProductFilterChips
 import easy.warehouse.ui.ProductItem
+import easy.warehouse.ui.ScreenContent
 import easy.warehouse.ui.SearchBar
 import easy.warehouse.ui.UserSelection
 import easy.warehouse.ui.WAppBar
@@ -68,90 +69,92 @@ fun WarehouseScreen() {
         topBar = { WAppBar("Magazzino") },
         snackbarHost = { SnackbarHost(snackbarHostState) }
     ) { innerPadding ->
-        Box(
-            modifier = Modifier
-                .padding(innerPadding)
-                .fillMaxSize()
-        ) {
-            LazyVerticalGrid(
-                columns = GridCells.Adaptive(minSize = 300.dp),
-                modifier = Modifier.fillMaxSize(),
-                contentPadding = PaddingValues(16.dp),
-                horizontalArrangement = Arrangement.spacedBy(16.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
+        ScreenContent(innerPadding) {
+            Box(
+                modifier = Modifier
+                    .padding(innerPadding)
+                    .fillMaxSize()
             ) {
-                item(span = { GridItemSpan(this.maxLineSpan) }) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(16.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        UserSelection(
-                            employees = employees,
-                            selectedEmployee = selectedEmployee,
-                            onEmployeeSelected = { selectedEmployee = it },
-                            modifier = Modifier.weight(1f)
-                        )
-                        DestinationSelection(
-                            vehicles = vehicles,
-                            selectedVehicle = selectedVehicle,
-                            onVehicleSelected = { selectedVehicle = it },
-                            modifier = Modifier.weight(1f)
-                        )
-                    }
-                }
-
-                item(span = { GridItemSpan(this.maxLineSpan) }) {
-                    HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
-                }
-
-                item(span = { GridItemSpan(this.maxLineSpan) }) {
-                    Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-                        val searchQuery by productVm.searchQuery.collectAsStateWithLifecycle("")
-                        SearchBar(
-                            query = searchQuery,
-                            onQueryChange = { productVm.updateSearch(it) }
-                        )
-                        ProductFilterChips(productVm)
-                        Text(text = "Prodotti trovati: (${products.size})")
-                    }
-                }
-
-                items(products) { product ->
-                    ProductItem(product, productVm)
-                }
-            }
-
-            if (pendingChanges.isNotEmpty()) {
-                ChangesSummary(
-                    pendingChanges = pendingChanges,
-                    onSave = {
-                        selectedEmployee?.let { employee ->
-                            productVm.saveChanges()
-                            pendingChanges.values.forEach { change ->
-                                reportVm.createReport(
-                                    productId = change.productId,
-                                    employeeId = employee.id,
-                                    vehiclePlate = selectedVehicle?.vehiclePlate,
-                                    deltaProduct = change.delta
-                                )
-                            }
-                            coroutineScope.launch {
-                                snackbarHostState.showSnackbar("Magazzino aggiornato con successo")
-                            }
-                        }?: {
-                            coroutineScope.launch {
-                                snackbarHostState.showSnackbar("Seleziona utente prima di salvare")
-                            }
+                LazyVerticalGrid(
+                    columns = GridCells.Adaptive(minSize = 300.dp),
+                    modifier = Modifier.fillMaxSize(),
+                    contentPadding = PaddingValues(16.dp),
+                    horizontalArrangement = Arrangement.spacedBy(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    item(span = { GridItemSpan(this.maxLineSpan) }) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(16.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            UserSelection(
+                                employees = employees,
+                                selectedEmployee = selectedEmployee,
+                                onEmployeeSelected = { selectedEmployee = it },
+                                modifier = Modifier.weight(1f)
+                            )
+                            DestinationSelection(
+                                vehicles = vehicles,
+                                selectedVehicle = selectedVehicle,
+                                onVehicleSelected = { selectedVehicle = it },
+                                modifier = Modifier.weight(1f)
+                            )
                         }
-                    },
-                    onClear = { productVm.clearChanges() },
-                    isSaveEnabled = selectedEmployee != null,
-                    isClearEnabled = pendingChanges.isNotEmpty(),
-                    modifier = Modifier
-                        .align(Alignment.BottomEnd)
-                        .padding(16.dp)
-                )
+                    }
+
+                    item(span = { GridItemSpan(this.maxLineSpan) }) {
+                        HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+                    }
+
+                    item(span = { GridItemSpan(this.maxLineSpan) }) {
+                        Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                            val searchQuery by productVm.searchQuery.collectAsStateWithLifecycle("")
+                            SearchBar(
+                                query = searchQuery,
+                                onQueryChange = { productVm.updateSearch(it) }
+                            )
+                            ProductFilterChips(productVm)
+                            Text(text = "Prodotti trovati: (${products.size})")
+                        }
+                    }
+
+                    items(products) { product ->
+                        ProductItem(product, productVm)
+                    }
+                }
+
+                if (pendingChanges.isNotEmpty()) {
+                    ChangesSummary(
+                        pendingChanges = pendingChanges,
+                        onSave = {
+                            selectedEmployee?.let { employee ->
+                                productVm.saveChanges()
+                                pendingChanges.values.forEach { change ->
+                                    reportVm.createReport(
+                                        productId = change.productId,
+                                        employeeId = employee.id,
+                                        vehiclePlate = selectedVehicle?.vehiclePlate,
+                                        deltaProduct = change.delta
+                                    )
+                                }
+                                coroutineScope.launch {
+                                    snackbarHostState.showSnackbar("Magazzino aggiornato con successo")
+                                }
+                            } ?: {
+                                coroutineScope.launch {
+                                    snackbarHostState.showSnackbar("Seleziona utente prima di salvare")
+                                }
+                            }
+                        },
+                        onClear = { productVm.clearChanges() },
+                        isSaveEnabled = selectedEmployee != null,
+                        isClearEnabled = pendingChanges.isNotEmpty(),
+                        modifier = Modifier
+                            .align(Alignment.BottomEnd)
+                            .padding(16.dp)
+                    )
+                }
             }
         }
     }

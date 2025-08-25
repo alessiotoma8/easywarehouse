@@ -1,10 +1,14 @@
 package easy.warehouse.ui
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -239,7 +243,7 @@ fun UserSelection(
             selectedItem = selectedEmployee,
             onItemSelected = onEmployeeSelected,
             itemText = { "${it.name} ${it.surname}" },
-            label = "Seleziona Utente"
+            label = "Seleziona Utente",
         )
     }
 }
@@ -403,6 +407,27 @@ fun ProductFilterChips(
                     selectedLabelColor = MaterialTheme.colorScheme.onPrimary
                 )
             )
+        }
+    }
+}
+
+
+@Composable
+fun ScreenContent(paddingValues: PaddingValues,  content: @Composable ColumnScope.() -> Unit) {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(paddingValues),
+        contentAlignment = Alignment.Center // centra il contenuto nel Box
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth(0.8f)
+                .padding(horizontal = 24.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            content()
         }
     }
 }

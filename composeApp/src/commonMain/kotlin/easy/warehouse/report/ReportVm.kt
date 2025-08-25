@@ -14,13 +14,24 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.datetime.DateTimePeriod
+import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.Instant
 import kotlinx.datetime.TimeZone
+import kotlinx.datetime.atStartOfDayIn
 import kotlinx.datetime.minus
+import kotlinx.datetime.plus
 import kotlinx.datetime.toLocalDateTime
 import kotlin.collections.filter
 import kotlin.time.Clock
+import kotlin.time.Duration.Companion.seconds
 import kotlin.time.ExperimentalTime
+
+data class InventoryItem(
+    val employeeName: String,
+    val employeeSurname: String,
+    val productTitle: String,
+    val totalCount: Int
+)
 
 @OptIn(ExperimentalTime::class)
 class ReportVm : ViewModel() {
@@ -34,27 +45,25 @@ class ReportVm : ViewModel() {
 
     val reports = reportRepo.getAllReports().combine(selectedDatePeriod){ reports, period->
         period?.let {
+            val tz = TimeZone.currentSystemDefault()
             val now = Clock.System.now()
-            val startInstant = now.minus(period, TimeZone.currentSystemDefault())
+
+            val todayStart = now.toLocalDateTime(tz).date.atStartOfDayIn(tz)
+
+            val startInstant = todayStart.minus(it, tz)
+
+            val endInstant = todayStart
+                .plus(1, DateTimeUnit.DAY, tz)
+                .minus(1.seconds)
+
             reports.filter { report ->
-                val reportInstant = report.getInstant()
-                reportInstant >= startInstant && reportInstant <= now
+                val instant = report.getInstant()
+                instant >= startInstant && instant <= endInstant
             }
         }?:reports
     }
         .stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
 
-
-    suspend fun getUserInventory(employeeId: Long): Map<String, Int> {
-        val reports = reportRepo.getAllReportsByEmployee(employeeId)
-
-        return reports
-            .groupBy { it.productTitle }
-            .mapValues { (_, productReports) ->
-                productReports.sumOf { it.productCountChange }
-            }
-            .filterValues { it != 0 } // opzionale, mostra solo i prodotti che ha ancora
-    }
 
 
     @OptIn(ExperimentalTime::class)
@@ -80,6 +89,23 @@ class ReportVm : ViewModel() {
 
             reportRepo.insertReport(report)
         }
+
+    fun generateInventory(reports: List<ReportEntity>): List<InventoryItem> {
+        return reports
+            .groupBy { it.employeeName to it.employeeSurname } // raggruppa per utente
+            .flatMap { (_, userReports) ->
+                userReports
+                    .groupBy { it.productTitle } // raggruppa per prodotto
+                    .map { (product, productReports) ->
+                        InventoryItem(
+                            employeeName = userReports.first().employeeName,
+                            employeeSurname = userReports.first().employeeSurname,
+                            productTitle = product,
+                            totalCount = productReports.sumOf { it.productCountChange } // somma dei delta
+                        )
+                    }.filter{it.totalCount > 0}
+            }
+    }
 
     fun filterByDatePeriod(period: DateTimePeriod?) = viewModelScope.launch {
         _selectedDatePeriod.emit(period)
