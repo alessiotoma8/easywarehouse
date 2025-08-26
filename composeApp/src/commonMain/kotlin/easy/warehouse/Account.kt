@@ -10,10 +10,15 @@ data class Account(
     }
 }
 
-class AccountManager{
-    val username = "robby"
-    val pwd = "123"
-     fun login(username:String,pwd:String): Boolean{
-        return username == this.username && pwd == this.pwd
+object AccountManager {
+    private val username = "robby"
+    private val pwd = "123"
+
+    var isAdmin = false
+        private set
+
+    fun login(username: String, pwd: String): Boolean {
+        isAdmin = username == this.username && pwd == this.pwd
+        return isAdmin
     }
 }

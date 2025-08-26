@@ -6,15 +6,20 @@ import androidx.compose.ui.window.WindowPlacement
 import androidx.compose.ui.window.application
 import androidx.compose.ui.window.rememberWindowState
 
+
 fun main() = application {
     val windowState = rememberWindowState(
         placement = WindowPlacement.Maximized
     )
+    val isAdmin = AccountManager.isAdmin
     Window(
-        onCloseRequest = ::exitApplication,
+        onCloseRequest = {
+            if (isAdmin) exitApplication() // solo admin può chiudere
+        },
         title = "easywarehouse",
         state = windowState,
-        resizable = false
+        resizable = false,
+        undecorated = !isAdmin
     ) {
         App()
     }

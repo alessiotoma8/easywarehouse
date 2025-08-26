@@ -244,6 +244,7 @@ fun UserSelection(
             onItemSelected = onEmployeeSelected,
             itemText = { "${it.name} ${it.surname}" },
             label = "Seleziona Utente",
+            isError = selectedEmployee == null
         )
     }
 }
@@ -280,6 +281,7 @@ fun <T> GenericExposedDropdownMenu(
     itemText: (T) -> String,
     label: String = "Seleziona Elemento",
     modifier: Modifier = Modifier,
+    isError:Boolean= false
 ) {
     var expanded by remember { mutableStateOf(false) }
     var searchQuery by remember { mutableStateOf("") }
@@ -300,7 +302,8 @@ fun <T> GenericExposedDropdownMenu(
             label = { Text(label) },
             trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
             colors = ExposedDropdownMenuDefaults.textFieldColors(),
-            modifier = Modifier.menuAnchor()
+            modifier = Modifier.menuAnchor(),
+            isError = isError
         )
         ExposedDropdownMenu(
             expanded = expanded,

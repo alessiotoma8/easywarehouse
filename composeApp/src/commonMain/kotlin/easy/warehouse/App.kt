@@ -25,8 +25,6 @@ import easy.ui.theme.AppTheme
 import easy.warehouse.ui.screen.AdminScreen
 import easy.warehouse.ui.screen.WarehouseScreen
 
-private val accountManager = AccountManager()
-
 @Composable
 fun App() {
     AppTheme {
@@ -82,7 +80,7 @@ fun App() {
                 WarehouseScreen()
             } else if (!isAdmin) {
                 LoginScreen { us, pwd ->
-                    isAdmin = accountManager.login(us, pwd)
+                    isAdmin = AccountManager.login(us, pwd)
                 }
             } else if (!showReport) {
                 AdminScreen()

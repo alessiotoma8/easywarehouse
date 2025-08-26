@@ -6,22 +6,19 @@ import easy.warehouse.db.getRoomDatabase
 import easy.warehouse.product.Utility
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.launchIn
-import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.datetime.DateTimePeriod
 import kotlinx.datetime.DateTimeUnit
-import kotlinx.datetime.Instant
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.atStartOfDayIn
 import kotlinx.datetime.minus
 import kotlinx.datetime.plus
 import kotlinx.datetime.toLocalDateTime
-import kotlin.collections.filter
+import kotlin.math.abs
 import kotlin.time.Clock
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.ExperimentalTime
@@ -30,7 +27,7 @@ data class InventoryItem(
     val employeeName: String,
     val employeeSurname: String,
     val productTitle: String,
-    val totalCount: Int
+    val totalCount: Int,
 )
 
 @OptIn(ExperimentalTime::class)
@@ -43,7 +40,7 @@ class ReportVm : ViewModel() {
     private val _selectedDatePeriod = MutableStateFlow<DateTimePeriod?>(null)
     val selectedDatePeriod = _selectedDatePeriod.asStateFlow()
 
-    val reports = reportRepo.getAllReports().combine(selectedDatePeriod){ reports, period->
+    val reports = reportRepo.getAllReports().combine(selectedDatePeriod) { reports, period ->
         period?.let {
             val tz = TimeZone.currentSystemDefault()
             val now = Clock.System.now()
@@ -60,10 +57,9 @@ class ReportVm : ViewModel() {
                 val instant = report.getInstant()
                 instant >= startInstant && instant <= endInstant
             }
-        }?:reports
+        } ?: reports
     }
         .stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
-
 
 
     @OptIn(ExperimentalTime::class)
@@ -90,9 +86,8 @@ class ReportVm : ViewModel() {
             reportRepo.insertReport(report)
         }
 
-    fun generateInventory(reports: List<ReportEntity>): List<InventoryItem> {
-        return reports
-            .groupBy { it.employeeName to it.employeeSurname } // raggruppa per utente
+    val inventoryUser = reportRepo.getAllReports().map { report ->
+        report.groupBy { it.employeeName to it.employeeSurname } // raggruppa per utente
             .flatMap { (_, userReports) ->
                 userReports
                     .groupBy { it.productTitle } // raggruppa per prodotto
@@ -103,9 +98,11 @@ class ReportVm : ViewModel() {
                             productTitle = product,
                             totalCount = productReports.sumOf { it.productCountChange } // somma dei delta
                         )
-                    }.filter{it.totalCount > 0}
+                    }.filter { it.totalCount < 0 }.map {
+                        it.copy(totalCount = abs(it.totalCount))
+                    }
             }
-    }
+    } .stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
 
     fun filterByDatePeriod(period: DateTimePeriod?) = viewModelScope.launch {
         _selectedDatePeriod.emit(period)
