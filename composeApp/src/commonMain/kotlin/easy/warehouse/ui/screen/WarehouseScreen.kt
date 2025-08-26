@@ -71,12 +71,10 @@ fun WarehouseScreen() {
         topBar = { WAppBar("Magazzino") },
         snackbarHost = { SnackbarHost(snackbarHostState) }
     ) { innerPadding ->
-        ScreenContent(innerPadding) {
-            Box(
-                modifier = Modifier
-                    .padding(innerPadding)
-                    .fillMaxSize()
-            ) {
+        Box(
+            modifier = Modifier.fillMaxSize()
+        ) {
+            ScreenContent(innerPadding) {
                 LazyVerticalGrid(
                     columns = GridCells.Adaptive(minSize = 300.dp),
                     modifier = Modifier.fillMaxSize(),
@@ -132,41 +130,41 @@ fun WarehouseScreen() {
                         ProductItem(product, productVm)
                     }
                 }
+            }
 
-                if (pendingChanges.isNotEmpty()) {
-                    ChangesSummary(
-                        pendingChanges = pendingChanges,
-                        onSave = {
-                            selectedEmployee?.let { employee ->
-                                productVm.saveChanges()
-                                pendingChanges.values.forEach { change ->
-                                    reportVm.createReport(
-                                        productId = change.productId,
-                                        employeeId = employee.id,
-                                        vehiclePlate = selectedVehicle?.vehiclePlate,
-                                        deltaProduct = change.delta
-                                    )
-                                }
-                                selectedVehicle = null
-                                selectedEmployee = null
-                                productVm.updateSearch("")
-                                coroutineScope.launch {
-                                    snackbarHostState.showSnackbar("Magazzino aggiornato con successo")
-                                }
-                            } ?: {
-                                coroutineScope.launch {
-                                    snackbarHostState.showSnackbar("Seleziona utente prima di salvare")
-                                }
+            if (pendingChanges.isNotEmpty()) {
+                ChangesSummary(
+                    pendingChanges = pendingChanges,
+                    onSave = {
+                        selectedEmployee?.let { employee ->
+                            productVm.saveChanges()
+                            pendingChanges.values.forEach { change ->
+                                reportVm.createReport(
+                                    productId = change.productId,
+                                    employeeId = employee.id,
+                                    vehiclePlate = selectedVehicle?.vehiclePlate,
+                                    deltaProduct = change.delta
+                                )
                             }
-                        },
-                        onClear = { productVm.clearChanges() },
-                        isSaveEnabled = selectedEmployee != null,
-                        isClearEnabled = pendingChanges.isNotEmpty(),
-                        modifier = Modifier
-                            .align(Alignment.BottomEnd)
-                            .padding(16.dp)
-                    )
-                }
+                            selectedVehicle = null
+                            selectedEmployee = null
+                            productVm.updateSearch("")
+                            coroutineScope.launch {
+                                snackbarHostState.showSnackbar("Magazzino aggiornato con successo")
+                            }
+                        } ?: {
+                            coroutineScope.launch {
+                                snackbarHostState.showSnackbar("Seleziona utente prima di salvare")
+                            }
+                        }
+                    },
+                    onClear = { productVm.clearChanges() },
+                    isSaveEnabled = selectedEmployee != null,
+                    isClearEnabled = pendingChanges.isNotEmpty(),
+                    modifier = Modifier
+                        .align(Alignment.BottomEnd)
+                        .padding(16.dp)
+                )
             }
         }
     }

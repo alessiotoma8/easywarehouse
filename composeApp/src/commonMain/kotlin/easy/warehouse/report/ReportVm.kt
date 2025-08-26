@@ -27,6 +27,8 @@ data class InventoryItem(
     val employeeName: String,
     val employeeSurname: String,
     val productTitle: String,
+    val productDesc: String,
+    val productUtility: String,
     val totalCount: Int,
 )
 
@@ -87,22 +89,26 @@ class ReportVm : ViewModel() {
         }
 
     val inventoryUser = reportRepo.getAllReports().map { report ->
-        report.groupBy { it.employeeName to it.employeeSurname } // raggruppa per utente
+        report.groupBy { it.employeeName to it.employeeSurname }
             .flatMap { (_, userReports) ->
                 userReports
-                    .groupBy { it.productTitle } // raggruppa per prodotto
+                    .groupBy {
+                        it.productTitle + "/" + it.productDesc + "/" + it.productUtility.displayName
+                    }
                     .map { (product, productReports) ->
                         InventoryItem(
                             employeeName = userReports.first().employeeName,
                             employeeSurname = userReports.first().employeeSurname,
-                            productTitle = product,
+                            productTitle = product.split("/")[0],
+                            productDesc = product.split("/")[1],
+                            productUtility = product.split("/")[2],
                             totalCount = productReports.sumOf { it.productCountChange } // somma dei delta
                         )
                     }.filter { it.totalCount < 0 }.map {
                         it.copy(totalCount = abs(it.totalCount))
                     }
             }
-    } .stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
+    }.stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
 
     fun filterByDatePeriod(period: DateTimePeriod?) = viewModelScope.launch {
         _selectedDatePeriod.emit(period)

@@ -12,12 +12,9 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Remove
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -45,7 +42,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -56,8 +52,6 @@ import easy.warehouse.product.ProductEntity
 import easy.warehouse.product.ProductVm
 import easy.warehouse.product.Utility
 
-private val DarkGreen = Color(0xFF1B5E20)
-private val DarkRed = Color(0xFFB71C1C)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -131,6 +125,15 @@ fun ProductItem(product: ProductEntity, productVm: ProductVm) {
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Button(
+                    onClick = { productVm.increaseCount(product.id) },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.error
+                    ),
+                    shape = RoundedCornerShape(12.dp)
+                ) {
+                    Text("Lascia")
+                }
+                Button(
                     onClick = { productVm.decreaseCount(product.id) },
                     enabled = product.count > 0,
                     colors = ButtonDefaults.buttonColors(
@@ -139,15 +142,6 @@ fun ProductItem(product: ProductEntity, productVm: ProductVm) {
                     shape = RoundedCornerShape(12.dp),
                 ) {
                     Text("Prendi")
-                }
-                Button(
-                    onClick = { productVm.increaseCount(product.id) },
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.error
-                    ),
-                    shape = RoundedCornerShape(12.dp)
-                ) {
-                    Text("Lascia")
                 }
             }
         }
@@ -183,7 +177,9 @@ fun ChangesSummary(
             pendingChanges.values.forEach { change ->
                 val action = if (change.delta > 0) "Lasciato" else "Preso"
                 val delta = if (change.delta > 0) change.delta else -change.delta
-                val color = if (change.delta > 0) DarkRed else DarkGreen
+                val color = if (change.delta > 0)
+                    MaterialTheme.colorScheme.error
+                else MaterialTheme.colorScheme.primary
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically,
@@ -234,7 +230,7 @@ fun UserSelection(
     employees: List<EmployeeEntity>,
     selectedEmployee: EmployeeEntity?,
     onEmployeeSelected: (EmployeeEntity) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     Column(modifier = modifier) {
         Text("Utente", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
@@ -254,7 +250,7 @@ fun DestinationSelection(
     vehicles: List<VehicleDestinationEntity>,
     selectedVehicle: VehicleDestinationEntity?,
     onVehicleSelected: (VehicleDestinationEntity) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     Column(modifier = modifier) {
         Text(
@@ -281,7 +277,7 @@ fun <T> GenericExposedDropdownMenu(
     itemText: (T) -> String,
     label: String = "Seleziona Elemento",
     modifier: Modifier = Modifier,
-    isError:Boolean= false
+    isError: Boolean = false,
 ) {
     var expanded by remember { mutableStateOf(false) }
     var searchQuery by remember { mutableStateOf("") }
@@ -416,7 +412,7 @@ fun ProductFilterChips(
 
 
 @Composable
-fun ScreenContent(paddingValues: PaddingValues,  content: @Composable ColumnScope.() -> Unit) {
+fun ScreenContent(paddingValues: PaddingValues, content: @Composable ColumnScope.() -> Unit) {
     Box(
         modifier = Modifier
             .fillMaxSize()

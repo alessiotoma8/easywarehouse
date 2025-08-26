@@ -84,6 +84,22 @@ private fun ReportsContent(
     reportVm: ReportVm,
     reports: List<ReportEntity>,
 ) {
+    val filteredReports = reports
+    Column(modifier = Modifier.fillMaxSize(), verticalArrangement = Arrangement.spacedBy(16.dp)) {
+        ReportSearch(reportVm)
+        LazyColumn {
+            stickyHeader {
+                ReportsHeader()
+            }
+            items(filteredReports) { report ->
+                ReportRow(report)
+            }
+        }
+    }
+}
+
+@Composable
+fun ReportSearch(reportVm: ReportVm) {
     var searchQuery by remember { mutableStateOf("") }
     val selectedDatePeriod by reportVm.selectedDatePeriod.collectAsStateWithLifecycle()
 
@@ -94,32 +110,39 @@ private fun ReportsContent(
         DateTimePeriod(years = 1) to "Ultimo anno"
     )
 
-    val filteredReports = reports.filter { report ->
-        val query = searchQuery.lowercase()
-        report.employeeName.lowercase().contains(query) ||
-                report.employeeSurname.lowercase().contains(query) ||
-                report.productTitle.lowercase().contains(query) ||
-                report.productDesc.lowercase().contains(query)
-    }
+    SearchBar(
+        query = searchQuery,
+        onQueryChange = { searchQuery = it },
+        placeholder = "Cerca per nome, prodotto, dipendente ..."
+    )
 
-    Column(modifier = Modifier.fillMaxSize(), verticalArrangement = Arrangement.spacedBy(16.dp)) {
-        SearchBar(
-            query = searchQuery,
-            onQueryChange = { searchQuery = it },
-            placeholder = "Cerca per nome, prodotto, dipendente ..."
+    FlowRow(
+        modifier = Modifier.fillMaxWidth().padding(horizontal = 4.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        verticalArrangement = Arrangement.Center
+    ) {
+        FilterChip(
+            selected = selectedDatePeriod == null,
+            onClick = { reportVm.filterByDatePeriod(null) },
+            label = {
+                Text(
+                    text = "Tutti".uppercase(),
+                    style = MaterialTheme.typography.titleLarge
+                )
+            },
+            colors = androidx.compose.material3.FilterChipDefaults.filterChipColors(
+                selectedContainerColor = MaterialTheme.colorScheme.primary,
+                selectedLabelColor = MaterialTheme.colorScheme.onPrimary
+            )
         )
 
-        FlowRow(
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 4.dp),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-            verticalArrangement = Arrangement.Center
-        ) {
+        dateTimeLabels.keys.forEach { dateTimePeriod ->
             FilterChip(
-                selected = selectedDatePeriod == null,
-                onClick = { reportVm.filterByDatePeriod(null) },
+                selected = selectedDatePeriod == dateTimePeriod,
+                onClick = { reportVm.filterByDatePeriod(dateTimePeriod) },
                 label = {
                     Text(
-                        text = "Tutti".uppercase(),
+                        text = dateTimeLabels[dateTimePeriod]?.uppercase() ?: "",
                         style = MaterialTheme.typography.titleLarge
                     )
                 },
@@ -128,34 +151,9 @@ private fun ReportsContent(
                     selectedLabelColor = MaterialTheme.colorScheme.onPrimary
                 )
             )
-
-            dateTimeLabels.keys.forEach { dateTimePeriod ->
-                FilterChip(
-                    selected = selectedDatePeriod == dateTimePeriod,
-                    onClick = { reportVm.filterByDatePeriod(dateTimePeriod) },
-                    label = {
-                        Text(
-                            text = dateTimeLabels[dateTimePeriod]?.uppercase() ?: "",
-                            style = MaterialTheme.typography.titleLarge
-                        )
-                    },
-                    colors = androidx.compose.material3.FilterChipDefaults.filterChipColors(
-                        selectedContainerColor = MaterialTheme.colorScheme.primary,
-                        selectedLabelColor = MaterialTheme.colorScheme.onPrimary
-                    )
-                )
-            }
-        }
-
-        LazyColumn {
-            stickyHeader {
-                ReportsHeader()
-            }
-            items(filteredReports) { report ->
-                ReportRow(report)
-            }
         }
     }
+
 }
 
 @Composable
@@ -271,7 +269,8 @@ fun UserInventoryRow(item: InventoryItem) {
     ) {
         Cell("${item.employeeName} ${item.employeeSurname}", weight = 2f)
         Cell(item.productTitle, weight = 2f)
-
+        Cell(item.productDesc, weight = 2f)
+        Cell(item.productUtility, weight = 1f)
         Cell(item.totalCount.toString(), weight = 1f, alignRight = true)
     }
     Divider(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f))
