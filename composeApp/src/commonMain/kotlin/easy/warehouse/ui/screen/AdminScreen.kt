@@ -51,6 +51,7 @@ import easy.warehouse.employee.EmployeeVm
 import easy.warehouse.product.ProductEntity
 import easy.warehouse.product.ProductVm
 import easy.warehouse.product.Utility
+import easy.warehouse.ui.GenericExposedDropdownMenu
 import easy.warehouse.ui.ScreenContent
 import easy.warehouse.ui.WAppBar
 import kotlinx.coroutines.launch
@@ -464,49 +465,6 @@ fun ProductRemoveSection(snackbarHostState: SnackbarHostState) {
             modifier = Modifier.widthIn(max = 400.dp)
         ) {
             Text("Rimuovi Prodotto")
-        }
-    }
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun <T> GenericExposedDropdownMenu(
-    items: List<T>,
-    selectedItem: T?,
-    onItemSelected: (T) -> Unit,
-    itemText: (T) -> String,
-    label: String = "Seleziona Item",
-    modifier: Modifier = Modifier,
-) {
-    var expanded by remember { mutableStateOf(false) }
-    ExposedDropdownMenuBox(
-        expanded = expanded,
-        onExpandedChange = { expanded = !expanded },
-        modifier = modifier
-    ) {
-        TextField(
-            readOnly = true,
-            value = selectedItem?.let(itemText) ?: label,
-            onValueChange = {},
-            label = { Text(label) },
-            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
-            colors = ExposedDropdownMenuDefaults.textFieldColors(),
-            modifier = Modifier.menuAnchor()
-        )
-        ExposedDropdownMenu(
-            expanded = expanded,
-            onDismissRequest = { expanded = false }
-        ) {
-            items.forEach { item ->
-                DropdownMenuItem(
-                    text = { Text(itemText(item)) },
-                    onClick = {
-                        onItemSelected(item)
-                        expanded = false
-                    },
-                    contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding
-                )
-            }
         }
     }
 }

@@ -42,26 +42,44 @@ class ReportVm : ViewModel() {
     private val _selectedDatePeriod = MutableStateFlow<DateTimePeriod?>(null)
     val selectedDatePeriod = _selectedDatePeriod.asStateFlow()
 
-    val reports = reportRepo.getAllReports().combine(selectedDatePeriod) { reports, period ->
-        period?.let {
-            val tz = TimeZone.currentSystemDefault()
-            val now = Clock.System.now()
+    private val _searchQuery = MutableStateFlow<String?>(null)
+    val searchQuery = _searchQuery.asStateFlow()
 
-            val todayStart = now.toLocalDateTime(tz).date.atStartOfDayIn(tz)
+    private val dbReports = reportRepo.getAllReports()
+    val reports =
+        combine(dbReports, selectedDatePeriod, searchQuery) { reports, period, searchQuery ->
+            val periodFIlteredReport = period?.let {
+                val tz = TimeZone.currentSystemDefault()
+                val now = Clock.System.now()
 
-            val startInstant = todayStart.minus(it, tz)
+                val todayStart = now.toLocalDateTime(tz).date.atStartOfDayIn(tz)
 
-            val endInstant = todayStart
-                .plus(1, DateTimeUnit.DAY, tz)
-                .minus(1.seconds)
+                val startInstant = todayStart.minus(it, tz)
 
-            reports.filter { report ->
-                val instant = report.getInstant()
-                instant >= startInstant && instant <= endInstant
-            }
-        } ?: reports
-    }
-        .stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
+                val endInstant = todayStart
+                    .plus(1, DateTimeUnit.DAY, tz)
+                    .minus(1.seconds)
+
+                reports.filter { report ->
+                    val instant = report.getInstant()
+                    instant >= startInstant && instant <= endInstant
+                }
+            } ?: reports
+
+            searchQuery?.let { query ->
+                if (query.isBlank()) {
+                    periodFIlteredReport
+                } else {
+                    periodFIlteredReport.filter {
+                        it.productDesc.contains(query, ignoreCase = true) ||
+                                it.productTitle.contains(query, ignoreCase = true) ||
+                                it.productUtility.displayName.contains(query, ignoreCase = true) ||
+                                it.employeeName.contains(query, ignoreCase = true) ||
+                                it.employeeSurname.contains(query, ignoreCase = true)
+                    }
+                }
+            } ?: periodFIlteredReport
+        }.stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
 
 
     @OptIn(ExperimentalTime::class)
@@ -112,5 +130,10 @@ class ReportVm : ViewModel() {
 
     fun filterByDatePeriod(period: DateTimePeriod?) = viewModelScope.launch {
         _selectedDatePeriod.emit(period)
+    }
+
+    fun searchReport(str: String) = viewModelScope.launch {
+        _selectedDatePeriod.emit(null)
+        _searchQuery.value = str
     }
 }

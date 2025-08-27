@@ -8,7 +8,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material3.Divider
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
@@ -91,8 +91,8 @@ private fun ReportsContent(
             stickyHeader {
                 ReportsHeader()
             }
-            items(filteredReports) { report ->
-                ReportRow(report)
+            itemsIndexed(filteredReports) { index, item ->
+                ReportRow(item, index)
             }
         }
     }
@@ -112,7 +112,10 @@ fun ReportSearch(reportVm: ReportVm) {
 
     SearchBar(
         query = searchQuery,
-        onQueryChange = { searchQuery = it },
+        onQueryChange = {
+            searchQuery = it
+            reportVm.searchReport(it)
+        },
         placeholder = "Cerca per nome, prodotto, dipendente ..."
     )
 
@@ -166,6 +169,7 @@ private fun ReportsHeader() {
         horizontalArrangement = Arrangement.spacedBy(4.dp)
     ) {
         HeaderCell("Data", weight = 1f)
+        HeaderCell("Ora", weight = 1f)
         HeaderCell("Dipendente", weight = 1.5f)
         HeaderCell("Prodotto", weight = 2f)
         HeaderCell("Desc prodotto", weight = 2f)
@@ -176,10 +180,16 @@ private fun ReportsHeader() {
 
 @OptIn(ExperimentalTime::class)
 @Composable
-private fun ReportRow(report: ReportEntity) {
+private fun ReportRow(report: ReportEntity, index: Int) {
+    val backgroundColor = if (index % 2 == 0) {
+        MaterialTheme.colorScheme.surfaceVariant
+    } else {
+        MaterialTheme.colorScheme.background
+    }
     Row(
         modifier = Modifier
             .fillMaxWidth()
+            .background(backgroundColor)
             .padding(vertical = 4.dp),
         horizontalArrangement = Arrangement.spacedBy(4.dp)
     ) {
@@ -188,7 +198,8 @@ private fun ReportRow(report: ReportEntity) {
         val formattedDate =
             "${reportDateTime.date.dayOfMonth}/${reportDateTime.date.monthNumber}/${reportDateTime.date.year}"
 
-        Cell("$formattedDate\n$formattedTime", weight = 1f)
+        Cell(formattedDate, weight = 1f)
+        Cell(formattedTime, weight = 1f)
         Cell("${report.employeeName} ${report.employeeSurname}", weight = 1.5f)
         Cell(report.productTitle, weight = 2f)
         Cell(report.productDesc, weight = 2f)
@@ -227,8 +238,8 @@ fun UserInventoryScreen(inventory: List<InventoryItem>) {
             stickyHeader {
                 UserInventoryHeader()
             }
-            items(inventory) { item ->
-                UserInventoryRow(item)
+            itemsIndexed(inventory) { index, item ->
+                UserInventoryRow(item = item, index = index)
             }
         }
     } else {
@@ -260,10 +271,16 @@ fun UserInventoryHeader() {
 }
 
 @Composable
-fun UserInventoryRow(item: InventoryItem) {
+fun UserInventoryRow(item: InventoryItem, index: Int) {
+    val backgroundColor = if (index % 2 == 0) {
+        MaterialTheme.colorScheme.surfaceVariant
+    } else {
+        MaterialTheme.colorScheme.background
+    }
     Row(
         modifier = Modifier
             .fillMaxWidth()
+            .background(backgroundColor)
             .padding(vertical = 4.dp),
         horizontalArrangement = Arrangement.spacedBy(4.dp)
     ) {
