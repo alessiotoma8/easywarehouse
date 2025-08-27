@@ -93,8 +93,10 @@ class ReportVm : ViewModel() {
             val report = ReportEntity(
                 date = date.date.toString(),
                 time = date.time.toString(),
+                employeeId = employeeId,
                 employeeName = employee?.name.orEmpty(),
                 employeeSurname = employee?.surname.orEmpty(),
+                productId = productId,
                 productTitle = product?.title.orEmpty(),
                 productDesc = product?.content.orEmpty(),
                 productUtility = product?.utility ?: Utility.ALTRI,
@@ -107,19 +109,17 @@ class ReportVm : ViewModel() {
         }
 
     val inventoryUser = reportRepo.getAllReports().map { report ->
-        report.groupBy { it.employeeName to it.employeeSurname }
+        report.groupBy { it.employeeId }
             .flatMap { (_, userReports) ->
                 userReports
-                    .groupBy {
-                        it.productTitle + "/" + it.productDesc + "/" + it.productUtility.displayName
-                    }
+                    .groupBy { it.productId }
                     .map { (product, productReports) ->
                         InventoryItem(
                             employeeName = userReports.first().employeeName,
                             employeeSurname = userReports.first().employeeSurname,
-                            productTitle = product.split("/")[0],
-                            productDesc = product.split("/")[1],
-                            productUtility = product.split("/")[2],
+                            productTitle = userReports.first().productTitle,
+                            productDesc = userReports.first().productDesc,
+                            productUtility = userReports.first().productUtility.displayName,
                             totalCount = productReports.sumOf { it.productCountChange } // somma dei delta
                         )
                     }.filter { it.totalCount < 0 }.map {

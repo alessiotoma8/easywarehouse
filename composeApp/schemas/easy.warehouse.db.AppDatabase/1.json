@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 1,
-    "identityHash": "0108f509e52f170ebd5867824bed735e",
+    "identityHash": "6f51a4b5c88eea6269004da7b2a5c7c9",
     "entities": [
       {
         "tableName": "ProductEntity",
@@ -102,7 +102,7 @@
       },
       {
         "tableName": "ReportEntity",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `date` TEXT NOT NULL, `time` TEXT NOT NULL, `employeeName` TEXT NOT NULL, `employeeSurname` TEXT NOT NULL, `productTitle` TEXT NOT NULL, `productDesc` TEXT NOT NULL, `productUtility` TEXT NOT NULL, `productCountChange` INTEGER NOT NULL, `vehiclePlate` TEXT, `vehicleName` TEXT)",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `date` TEXT NOT NULL, `time` TEXT NOT NULL, `employeeId` INTEGER NOT NULL, `employeeName` TEXT NOT NULL, `employeeSurname` TEXT NOT NULL, `productId` INTEGER NOT NULL, `productTitle` TEXT NOT NULL, `productDesc` TEXT NOT NULL, `productUtility` TEXT NOT NULL, `productCountChange` INTEGER NOT NULL, `vehiclePlate` TEXT, `vehicleName` TEXT)",
         "fields": [
           {
             "fieldPath": "id",
@@ -123,6 +123,12 @@
             "notNull": true
           },
           {
+            "fieldPath": "employeeId",
+            "columnName": "employeeId",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
             "fieldPath": "employeeName",
             "columnName": "employeeName",
             "affinity": "TEXT",
@@ -132,6 +138,12 @@
             "fieldPath": "employeeSurname",
             "columnName": "employeeSurname",
             "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "productId",
+            "columnName": "productId",
+            "affinity": "INTEGER",
             "notNull": true
           },
           {
@@ -179,7 +191,7 @@
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '0108f509e52f170ebd5867824bed735e')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '6f51a4b5c88eea6269004da7b2a5c7c9')"
     ]
   }
 }
