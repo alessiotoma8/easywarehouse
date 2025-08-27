@@ -25,13 +25,13 @@ import easy.warehouse.ui.WAppBar
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun LoginScreen(authAction: (String,String) -> Unit) {
+fun LoginScreen(authAction: (String,String) -> Unit, onBack:()->Unit) {
     var username by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
 
     Scaffold(
         topBar = {
-            WAppBar("Login")
+            WAppBar("Login", onBack)
         }
     ) { innerPadding ->
         ScreenContent(innerPadding) {

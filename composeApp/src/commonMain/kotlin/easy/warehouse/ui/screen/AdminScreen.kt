@@ -6,20 +6,17 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AddCircle
 import androidx.compose.material.icons.filled.RemoveCircle
 import androidx.compose.material3.Button
-import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ExposedDropdownMenuBox
-import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
@@ -29,7 +26,6 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
@@ -77,7 +73,7 @@ val Red2 = Color(0xFFF44336)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 @Preview
-fun AdminScreen() {
+fun AdminScreen(onLogoutClick: () -> Unit, onReportClick: () -> Unit) {
     var selectedTabActionIndex by remember { mutableStateOf(0) }
     val actions = listOf(
         TabAction("Aggiungi", Icons.Default.AddCircle, Green2),
@@ -91,11 +87,29 @@ fun AdminScreen() {
 
     Scaffold(
         topBar = {
-            WAppBar("Pannello di Amministrazione")
+            WAppBar("Pannello di Amministrazione") {
+                Button(
+                    onClick = onReportClick,
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.tertiary
+                    ),
+                ) {
+                    Text("Report")
+                }
+                Spacer(modifier = Modifier.width(16.dp))
+                Button(
+                    onClick = onLogoutClick,
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.error
+                    ),
+                ) {
+                    Text("Esci")
+                }
+            }
         },
         snackbarHost = { SnackbarHost(snackbarHostState) }
     ) { innerPadding ->
-        ScreenContent(innerPadding){
+        ScreenContent(innerPadding) {
             TabRow(selectedTabIndex = selectedTabIndex) {
                 tabs.forEachIndexed { index, title ->
                     Tab(

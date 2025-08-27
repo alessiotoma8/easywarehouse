@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -27,6 +28,7 @@ import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
@@ -55,14 +57,31 @@ import easy.warehouse.product.Utility
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun WAppBar(text: String) {
+fun WAppBar(
+    text: String,
+    onBack: (() -> Unit)? = null,
+    actions: @Composable() () -> Unit = {},
+) {
     TopAppBar(
         title = {
-            Text(
-                text,
-                fontWeight = FontWeight.ExtraBold,
-                color = MaterialTheme.colorScheme.onPrimaryContainer
-            )
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ){
+                onBack?.let{
+                    IconButton(onBack){
+                        Icon(Icons.Filled.ArrowBack,null)
+                    }
+                }
+                Text(
+                    text,
+                    fontWeight = FontWeight.ExtraBold,
+                    color = MaterialTheme.colorScheme.onPrimaryContainer
+                )
+            }
+        },
+        actions = {
+            actions()
         },
         colors = androidx.compose.material3.TopAppBarDefaults.topAppBarColors(
             containerColor = MaterialTheme.colorScheme.primaryContainer

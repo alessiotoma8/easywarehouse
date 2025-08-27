@@ -12,6 +12,7 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
@@ -49,7 +50,7 @@ import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun WarehouseScreen() {
+fun WarehouseScreen(onLoginClick: () -> Unit) {
     val productVm = viewModel<ProductVm>()
     val products by productVm.displayProducts.collectAsStateWithLifecycle(emptyList())
     val pendingChanges by productVm.pendingChanges.collectAsStateWithLifecycle(emptyMap())
@@ -68,7 +69,15 @@ fun WarehouseScreen() {
     val coroutineScope = rememberCoroutineScope()
 
     Scaffold(
-        topBar = { WAppBar("Magazzino") },
+        topBar = {
+            Row {
+                WAppBar("Magazzino"){
+                    Button(onClick = onLoginClick){
+                        Text("Accedi")
+                    }
+                }
+            }
+        },
         snackbarHost = { SnackbarHost(snackbarHostState) }
     ) { innerPadding ->
         Box(
