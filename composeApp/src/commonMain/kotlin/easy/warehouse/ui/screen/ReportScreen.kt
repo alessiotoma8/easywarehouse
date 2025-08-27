@@ -9,7 +9,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.material3.Button
 import androidx.compose.material3.Divider
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
@@ -42,7 +41,7 @@ import kotlin.time.ExperimentalTime
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ReportsScreen(onBackClick:()->Unit) {
+fun ReportsScreen(onBackClick: () -> Unit) {
     val reportVm = viewModel<ReportVm>()
     val reports by reportVm.reports.collectAsStateWithLifecycle()
     val userInventory by reportVm.inventoryUser.collectAsStateWithLifecycle(emptyList())
@@ -175,6 +174,8 @@ private fun ReportsHeader() {
         HeaderCell("Prodotto", weight = 2f)
         HeaderCell("Desc prodotto", weight = 2f)
         HeaderCell("Settore prodotto", weight = 1f)
+        HeaderCell("Nome veicolo", weight = 1f)
+        HeaderCell("Targa veicolo", weight = 1f)
         HeaderCell("Quantità Magazzino", weight = 1f, alignRight = true)
     }
 }
@@ -203,9 +204,14 @@ private fun ReportRow(report: ReportEntity, index: Int) {
         Cell(formattedTime, weight = 1f)
         Cell("${report.employeeName} ${report.employeeSurname}", weight = 1.5f)
         Cell(report.productTitle, weight = 2f)
-        Cell(report.productDesc, weight = 2f)
+        Cell(report.productDesc ?: "-", weight = 2f)
         Cell(report.productUtility.displayName, weight = 1f)
-        Cell(report.productCountChange.toString(), weight = 1f, alignRight = true)
+        Cell(report.vehicleName ?: "-", weight = 1f)
+        Cell(report.vehiclePlate ?: "-", weight = 1f)
+
+        val displayCount = if (report.productCountChange > 0)
+            "+${report.productCountChange}" else report.productCountChange.toString()
+        Cell(displayCount, weight = 1f, alignRight = true)
     }
     Divider(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f))
 }
@@ -267,6 +273,8 @@ fun UserInventoryHeader() {
         HeaderCell("Prodotto", weight = 2f)
         HeaderCell("Desc prodotto", weight = 2f)
         HeaderCell("Settore prodotto", weight = 1f)
+        HeaderCell("Nome veicolo", weight = 1f)
+        HeaderCell("Targa veicolo", weight = 1f)
         HeaderCell("Quantità", weight = 1f, alignRight = true)
     }
 }
@@ -287,8 +295,10 @@ fun UserInventoryRow(item: InventoryItem, index: Int) {
     ) {
         Cell("${item.employeeName} ${item.employeeSurname}", weight = 2f)
         Cell(item.productTitle, weight = 2f)
-        Cell(item.productDesc, weight = 2f)
+        Cell(item.productDesc ?: "-", weight = 2f)
         Cell(item.productUtility, weight = 1f)
+        Cell(item.vehicleName ?: "-", weight = 1f)
+        Cell(item.vehiclePlate ?: "-", weight = 1f)
         Cell(item.totalCount.toString(), weight = 1f, alignRight = true)
     }
     Divider(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f))

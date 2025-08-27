@@ -19,7 +19,7 @@ data class ReportEntity(
     val employeeSurname: String,
     val productId: Long,
     val productTitle: String,
-    val productDesc: String,
+    val productDesc: String?,
     val productUtility: Utility,
     val productCountChange: Int, // può essere positivo (aggiunta) o negativo (rimozione)
     val vehiclePlate: String? = null,

@@ -27,8 +27,10 @@ data class InventoryItem(
     val employeeName: String,
     val employeeSurname: String,
     val productTitle: String,
-    val productDesc: String,
+    val productDesc: String?,
     val productUtility: String,
+    val vehicleName: String?,
+    val vehiclePlate: String?,
     val totalCount: Int,
 )
 
@@ -71,10 +73,12 @@ class ReportVm : ViewModel() {
                     periodFIlteredReport
                 } else {
                     periodFIlteredReport.filter {
-                        it.productDesc.contains(query, ignoreCase = true) ||
+                        it.productDesc?.contains(query, ignoreCase = true) ?: false ||
                                 it.productTitle.contains(query, ignoreCase = true) ||
                                 it.productUtility.displayName.contains(query, ignoreCase = true) ||
                                 it.employeeName.contains(query, ignoreCase = true) ||
+                                it.vehicleName?.contains(query, ignoreCase = true) ?: false||
+                                it.vehiclePlate?.contains(query, ignoreCase = true) ?: false||
                                 it.employeeSurname.contains(query, ignoreCase = true)
                     }
                 }
@@ -98,7 +102,7 @@ class ReportVm : ViewModel() {
                 employeeSurname = employee?.surname.orEmpty(),
                 productId = productId,
                 productTitle = product?.title.orEmpty(),
-                productDesc = product?.content.orEmpty(),
+                productDesc = product?.content,
                 productUtility = product?.utility ?: Utility.ALTRI,
                 productCountChange = deltaProduct,
                 vehiclePlate = vehicle?.vehiclePlate,
@@ -118,9 +122,11 @@ class ReportVm : ViewModel() {
                             employeeName = userReports.first().employeeName,
                             employeeSurname = userReports.first().employeeSurname,
                             productTitle = userReports.first().productTitle,
-                            productDesc = userReports.first().productDesc,
+                            productDesc = userReports.first()?.productDesc,
                             productUtility = userReports.first().productUtility.displayName,
-                            totalCount = productReports.sumOf { it.productCountChange } // somma dei delta
+                            vehiclePlate = userReports.first().vehiclePlate,
+                            vehicleName = userReports.first().vehicleName,
+                            totalCount = productReports.sumOf { it.productCountChange } // somma dei deltaù
                         )
                     }.filter { it.totalCount < 0 }.map {
                         it.copy(totalCount = abs(it.totalCount))

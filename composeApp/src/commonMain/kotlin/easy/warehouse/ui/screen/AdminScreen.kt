@@ -329,7 +329,7 @@ fun ProductAddSection(snackbarHostState: SnackbarHostState) {
 
         Button(
             onClick = {
-                if (titleState.value.isNotBlank() && contentState.value.isNotBlank() && countState.value.isNotBlank() && utility != null) {
+                if (titleState.value.isNotBlank() && countState.value.isNotBlank() && utility != null) {
                     productVm.insertProduct(
                         ProductEntity(
                             title = titleState.value,
@@ -347,7 +347,7 @@ fun ProductAddSection(snackbarHostState: SnackbarHostState) {
                     }
                 }
             },
-            enabled = titleState.value.isNotBlank() && contentState.value.isNotBlank() && countState.value.toIntOrNull() != null && utility != null,
+            enabled = titleState.value.isNotBlank() && countState.value.toIntOrNull() != null && utility != null,
         ) {
             Text("Aggiungi Prodotto")
         }
@@ -461,7 +461,7 @@ fun ProductRemoveSection(snackbarHostState: SnackbarHostState) {
             items = products,
             selectedItem = selectedProduct,
             onItemSelected = { selectedProduct = it },
-            itemText = { it.title },
+            itemText = { "${it.title} \n ${it.content}" },
             label = "Seleziona Prodotto",
             modifier = Modifier.widthIn(max = 400.dp)
         )

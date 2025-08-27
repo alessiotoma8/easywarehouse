@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.safeContentPadding
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -16,6 +17,8 @@ import androidx.compose.ui.Modifier
 import easy.ui.theme.AppTheme
 import easy.warehouse.ui.screen.AdminScreen
 import easy.warehouse.ui.screen.WarehouseScreen
+import kotlinx.coroutines.delay
+import kotlin.time.Duration.Companion.minutes
 
 @Composable
 fun App() {
@@ -29,6 +32,13 @@ fun App() {
             var showLoginScreen by remember { mutableStateOf(false) }
             var isAdmin by remember { mutableStateOf(false) }
             var showReport by remember { mutableStateOf(false) }
+
+
+            fun logout(){
+                showLoginScreen = false
+                isAdmin = false
+                showReport = false
+            }
 
             if (!showLoginScreen) {
                 WarehouseScreen(onLoginClick = {
@@ -45,9 +55,7 @@ fun App() {
                 )
             } else if (!showReport) {
                 AdminScreen(onLogoutClick = {
-                    showLoginScreen = false
-                    isAdmin = false
-                    showReport = false
+                    logout()
                 }, onReportClick = {
                     showReport = true
                 })
@@ -56,4 +64,6 @@ fun App() {
             }
         }
     }
+
+
 }

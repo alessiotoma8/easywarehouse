@@ -2,11 +2,11 @@
   "formatVersion": 1,
   "database": {
     "version": 1,
-    "identityHash": "6f51a4b5c88eea6269004da7b2a5c7c9",
+    "identityHash": "6accd2086081b63206801658f5ed3ee9",
     "entities": [
       {
         "tableName": "ProductEntity",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `title` TEXT NOT NULL, `content` TEXT NOT NULL, `utility` TEXT NOT NULL, `count` INTEGER NOT NULL)",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `title` TEXT NOT NULL, `content` TEXT, `utility` TEXT NOT NULL, `count` INTEGER NOT NULL)",
         "fields": [
           {
             "fieldPath": "id",
@@ -23,8 +23,7 @@
           {
             "fieldPath": "content",
             "columnName": "content",
-            "affinity": "TEXT",
-            "notNull": true
+            "affinity": "TEXT"
           },
           {
             "fieldPath": "utility",
@@ -102,7 +101,7 @@
       },
       {
         "tableName": "ReportEntity",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `date` TEXT NOT NULL, `time` TEXT NOT NULL, `employeeId` INTEGER NOT NULL, `employeeName` TEXT NOT NULL, `employeeSurname` TEXT NOT NULL, `productId` INTEGER NOT NULL, `productTitle` TEXT NOT NULL, `productDesc` TEXT NOT NULL, `productUtility` TEXT NOT NULL, `productCountChange` INTEGER NOT NULL, `vehiclePlate` TEXT, `vehicleName` TEXT)",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `date` TEXT NOT NULL, `time` TEXT NOT NULL, `employeeId` INTEGER NOT NULL, `employeeName` TEXT NOT NULL, `employeeSurname` TEXT NOT NULL, `productId` INTEGER NOT NULL, `productTitle` TEXT NOT NULL, `productDesc` TEXT, `productUtility` TEXT NOT NULL, `productCountChange` INTEGER NOT NULL, `vehiclePlate` TEXT, `vehicleName` TEXT)",
         "fields": [
           {
             "fieldPath": "id",
@@ -155,8 +154,7 @@
           {
             "fieldPath": "productDesc",
             "columnName": "productDesc",
-            "affinity": "TEXT",
-            "notNull": true
+            "affinity": "TEXT"
           },
           {
             "fieldPath": "productUtility",
@@ -191,7 +189,7 @@
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '6f51a4b5c88eea6269004da7b2a5c7c9')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '6accd2086081b63206801658f5ed3ee9')"
     ]
   }
 }

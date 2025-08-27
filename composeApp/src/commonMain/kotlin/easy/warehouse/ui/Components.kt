@@ -67,10 +67,10 @@ fun WAppBar(
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ){
-                onBack?.let{
-                    IconButton(onBack){
-                        Icon(Icons.Filled.ArrowBack,null)
+            ) {
+                onBack?.let {
+                    IconButton(onBack) {
+                        Icon(Icons.Filled.ArrowBack, null)
                     }
                 }
                 Text(
@@ -115,12 +115,14 @@ fun ProductItem(product: ProductEntity, productVm: ProductVm) {
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onSurface
                     )
-                    Text(
-                        product.content,
-                        style = MaterialTheme.typography.bodyMedium,
-                        fontWeight = FontWeight.Normal,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
+                    product.content?.let {
+                        Text(
+                            text = it,
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontWeight = FontWeight.Normal,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
                     Text(
                         product.utility.displayName,
                         style = MaterialTheme.typography.bodySmall,
@@ -353,6 +355,9 @@ fun <T> GenericExposedDropdownMenu(
                     },
                     contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding
                 )
+                if (filteredItems.indexOf(item) != filteredItems.count() - 1) {
+                    HorizontalDivider()
+                }
             }
         }
     }
