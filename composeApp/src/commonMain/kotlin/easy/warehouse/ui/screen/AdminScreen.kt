@@ -28,6 +28,7 @@ import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -50,10 +51,11 @@ import easy.warehouse.product.Utility
 import easy.warehouse.ui.GenericExposedDropdownMenu
 import easy.warehouse.ui.ScreenContent
 import easy.warehouse.ui.WAppBar
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.ui.tooling.preview.Preview
 
-// Definizione del modello di dato per un campo di input generico
+// Data models
 data class Field<T>(
     val label: String,
     val state: MutableState<T>,
@@ -85,7 +87,7 @@ fun AdminScreen(onLogoutClick: () -> Unit = {}, onReportClick: () -> Unit = {}) 
 
     val snackbarHostState = remember { SnackbarHostState() }
 
-    // Stati per la gestione della modifica
+    // States for managing edits
     var selectedEmployeeForEdit by remember { mutableStateOf<EmployeeEntity?>(null) }
     var selectedVehicleForEdit by remember { mutableStateOf<VehicleDestinationEntity?>(null) }
     var selectedProductForEdit by remember { mutableStateOf<ProductEntity?>(null) }
@@ -192,8 +194,9 @@ fun AdminScreen(onLogoutClick: () -> Unit = {}, onReportClick: () -> Unit = {}) 
 }
 
 // -------------------------------------------------------------------------------------------------
-// COMPONENTE GENERICO BASE PER L'AGGIUNTA E LA MODIFICA DI ELEMENTI
+// GENERIC COMPONENTS
 // -------------------------------------------------------------------------------------------------
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun BaseAddTab(
@@ -219,7 +222,9 @@ fun BaseAddTab(
                 value = field.state.value,
                 onValueChange = { field.state.value = it },
                 label = { Text(field.label) },
-                modifier = Modifier.widthIn(max = 400.dp).fillMaxWidth(),
+                modifier = Modifier
+                    .widthIn(max = 400.dp)
+                    .fillMaxWidth(),
                 enabled = field.isEnabled
             )
         }
@@ -240,9 +245,99 @@ fun BaseAddTab(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun <T> BaseRemoveTab(
+    title: String,
+    listFlow: Flow<List<T>>,
+    selectedItemForEdit: T?,
+    onEdit: (T?) -> Unit,
+    onEditComplete: () -> Unit,
+    onRemove: (T) -> Unit,
+    itemText:  (T) -> String,
+    addEditContent: @Composable (T?, () -> Unit) -> Unit,
+    snackbarHostState: SnackbarHostState,
+    snackbarMessage: (T) -> String,
+) {
+    val items by listFlow.collectAsState(initial = emptyList())
+    var selectedItem by remember { mutableStateOf<T?>(null) }
+    val coroutineScope = rememberCoroutineScope()
+
+    if (selectedItemForEdit != null) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            addEditContent(selectedItemForEdit, onEditComplete)
+            Spacer(modifier = Modifier.height(16.dp))
+            Button(
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.error
+                ),
+                onClick = onEditComplete
+            ) {
+                Text("Annulla Modifica")
+            }
+        }
+    } else {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            Text(title, style = MaterialTheme.typography.titleLarge)
+            GenericExposedDropdownMenu(
+                items = items,
+                selectedItem = selectedItem,
+                onItemSelected = { selectedItem = it },
+                itemText = { itemText(it) },
+                label = "Seleziona",
+                modifier = Modifier.widthIn(max = 400.dp)
+            )
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                Button(
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.error
+                    ),
+                    onClick = {
+                        selectedItem?.let { item ->
+                            onRemove(item)
+                            selectedItem = null
+                            coroutineScope.launch {
+                                snackbarHostState.showSnackbar(snackbarMessage(item))
+                            }
+                        }
+                    },
+                    enabled = selectedItem != null,
+                ) {
+                    Text("Rimuovi")
+                }
+                Button(
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.tertiary
+                    ),
+                    onClick = {
+                        onEdit(selectedItem)
+                    },
+                    enabled = selectedItem != null,
+                ) {
+                    Text("Modifica")
+                }
+            }
+        }
+    }
+}
+
 // -------------------------------------------------------------------------------------------------
-// SEZIONI DI AGGIUNTA E MODIFICA DEGLI UTENTI
+// USER SECTIONS
 // -------------------------------------------------------------------------------------------------
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun UserAddSection(
@@ -266,7 +361,7 @@ fun UserAddSection(
             if (employeeToEdit == null) {
                 employeeVm.addEmployee(nameState.value, surnameState.value)
             } else {
-                // TODO: Implementare la logica di aggiornamento (update)
+                // TODO: Implement update logic
                 // employeeVm.updateEmployee(employeeToEdit.id, nameState.value, surnameState.value)
             }
             nameState.value = ""
@@ -279,9 +374,36 @@ fun UserAddSection(
     )
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun UserRemoveSection(
+    snackbarHostState: SnackbarHostState,
+    selectedEmployeeForEdit: EmployeeEntity?,
+    onEmployeeEdit: (EmployeeEntity?) -> Unit,
+    onEditComplete: () -> Unit
+) {
+    val employeeVm = viewModel<EmployeeVm>()
+
+    BaseRemoveTab(
+        title = "Rimuovi o Modifica un Utente",
+        listFlow = employeeVm.employees,
+        selectedItemForEdit = selectedEmployeeForEdit,
+        onEdit = onEmployeeEdit,
+        onEditComplete = onEditComplete,
+        onRemove = { employeeVm.removeEmployee(it.id) },
+        itemText = { "${it.name} ${it.surname}" },
+        addEditContent = { employee, onComplete ->
+            UserAddSection(snackbarHostState, employee, onComplete)
+        },
+        snackbarHostState = snackbarHostState,
+        snackbarMessage = { "Utente rimosso con successo!" }
+    )
+}
+
 // -------------------------------------------------------------------------------------------------
-// SEZIONI DI AGGIUNTA E MODIFICA DEI VEICOLI
+// VEHICLE SECTIONS
 // -------------------------------------------------------------------------------------------------
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun VehicleAddSection(
@@ -294,7 +416,7 @@ fun VehicleAddSection(
     val vehicleNameState = remember { mutableStateOf(vehicleToEdit?.vehicleName ?: "") }
 
     val fields = listOf(
-        Field("Targa Veicolo", vehiclePlateState, isRequired = true, isEnabled = vehicleToEdit == null),
+        Field("Targa Veicolo", vehiclePlateState, isRequired = true),
         Field("Nome Veicolo", vehicleNameState, isRequired = true)
     )
 
@@ -305,7 +427,7 @@ fun VehicleAddSection(
             if (vehicleToEdit == null) {
                 vehicleVm.addVehicle(vehiclePlateState.value, vehicleNameState.value)
             } else {
-                // TODO: Implementare la logica di aggiornamento (update)
+                // TODO: Implement update logic
                 // vehicleVm.updateVehicle(vehicleToEdit.vehiclePlate, vehicleNameState.value)
             }
             vehiclePlateState.value = ""
@@ -318,9 +440,36 @@ fun VehicleAddSection(
     )
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun VehicleRemoveSection(
+    snackbarHostState: SnackbarHostState,
+    selectedVehicleForEdit: VehicleDestinationEntity?,
+    onVehicleEdit: (VehicleDestinationEntity?) -> Unit,
+    onEditComplete: () -> Unit
+) {
+    val vehicleVm = viewModel<VehicleVm>()
+
+    BaseRemoveTab(
+        title = "Rimuovi o Modifica un Veicolo",
+        listFlow = vehicleVm.vehicles,
+        selectedItemForEdit = selectedVehicleForEdit,
+        onEdit = onVehicleEdit,
+        onEditComplete = onEditComplete,
+        onRemove = { vehicleVm.removeVehicle(it.vehiclePlate) },
+        itemText = { it.vehicleName },
+        addEditContent = { vehicle, onComplete ->
+            VehicleAddSection(snackbarHostState, vehicle, onComplete)
+        },
+        snackbarHostState = snackbarHostState,
+        snackbarMessage = { "Veicolo rimosso con successo!" }
+    )
+}
+
 // -------------------------------------------------------------------------------------------------
-// SEZIONI DI AGGIUNTA E MODIFICA DEI PRODOTTI
+// PRODUCT SECTIONS
 // -------------------------------------------------------------------------------------------------
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProductAddSection(
@@ -336,7 +485,7 @@ fun ProductAddSection(
     val coroutineScope = rememberCoroutineScope()
 
 
-    // Purtroppo per il dropdown la logica è più complessa e non si può generalizzare con i TextField
+    // The logic for the dropdown menu is unfortunately more complex and can't be generalized with TextField
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -349,14 +498,17 @@ fun ProductAddSection(
             value = titleState.value,
             onValueChange = { titleState.value = it },
             label = { Text("Titolo Prodotto") },
-            modifier = Modifier.widthIn(max = 400.dp).fillMaxWidth(),
-            enabled = productToEdit == null
+            modifier = Modifier
+                .widthIn(max = 400.dp)
+                .fillMaxWidth()
         )
         OutlinedTextField(
             value = contentState.value,
             onValueChange = { contentState.value = it },
             label = { Text("Descrizione") },
-            modifier = Modifier.widthIn(max = 400.dp).fillMaxWidth()
+            modifier = Modifier
+                .widthIn(max = 400.dp)
+                .fillMaxWidth()
         )
 
 
@@ -366,16 +518,20 @@ fun ProductAddSection(
                 countState.value = it
             },
             label = { Text("Quantità") },
-            modifier = Modifier.widthIn(max = 400.dp).fillMaxWidth()
+            modifier = Modifier
+                .widthIn(max = 400.dp)
+                .fillMaxWidth()
         )
 
         GenericExposedDropdownMenu(
             items = Utility.values().toList(),
             selectedItem = utility,
             onItemSelected = { utility = it },
-            itemText = { "${it.displayName} " },
+            itemText = { it.displayName },
             label = "Seleziona Settore",
-            modifier = Modifier.widthIn(max = 400.dp).fillMaxWidth()
+            modifier = Modifier
+                .widthIn(max = 400.dp)
+                .fillMaxWidth()
         )
 
 
@@ -392,7 +548,7 @@ fun ProductAddSection(
                             )
                         )
                     } else {
-                        // TODO: Implementare la logica di aggiornamento (update)
+                        // TODO: Implement update logic
                         // productVm.updateProduct(
                         //     productToEdit.id,
                         //     content = contentState.value,
@@ -416,174 +572,6 @@ fun ProductAddSection(
         }
     }
 }
-// -------------------------------------------------------------------------------------------------
-// SEZIONI DI RIMOZIONE/MODIFICA (MODIFICATE)
-// -------------------------------------------------------------------------------------------------
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun UserRemoveSection(
-    snackbarHostState: SnackbarHostState,
-    selectedEmployeeForEdit: EmployeeEntity?,
-    onEmployeeEdit: (EmployeeEntity?) -> Unit,
-    onEditComplete: () -> Unit
-) {
-    val employeeVm = viewModel<EmployeeVm>()
-    val employees by employeeVm.employees.collectAsStateWithLifecycle(emptyList())
-    var selectedEmployee by remember { mutableStateOf<EmployeeEntity?>(null) }
-    val coroutineScope = rememberCoroutineScope()
-
-    if (selectedEmployeeForEdit != null) {
-        Column(
-            modifier = Modifier.fillMaxWidth().padding(16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            UserAddSection(snackbarHostState, selectedEmployeeForEdit, onEditComplete)
-            Spacer(modifier = Modifier.height(16.dp))
-            Button(
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.error
-                ),
-                onClick = onEditComplete
-            ) {
-                Text("Annulla Modifica")
-            }
-        }
-    } else {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            Text("Rimuovi o Modifica un Utente", style = MaterialTheme.typography.titleLarge)
-            GenericExposedDropdownMenu(
-                items = employees,
-                selectedItem = selectedEmployee,
-                onItemSelected = { selectedEmployee = it },
-                itemText = { "${it.name} ${it.surname}" },
-                label = "Seleziona Utente",
-                modifier = Modifier.widthIn(max = 400.dp)
-            )
-
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(16.dp)
-            ) {
-                Button(
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.error
-                    ),
-                    onClick = {
-                        selectedEmployee?.let { employee ->
-                            employeeVm.removeEmployee(employee.id)
-                            selectedEmployee = null
-                            coroutineScope.launch {
-                                snackbarHostState.showSnackbar("Utente rimosso con successo!")
-                            }
-                        }
-                    },
-                    enabled = selectedEmployee != null,
-                ) {
-                    Text("Rimuovi Utente")
-                }
-                Button(
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.tertiary
-                    ),
-                    onClick = {
-                        onEmployeeEdit(selectedEmployee)
-                    },
-                    enabled = selectedEmployee != null,
-                ) {
-                    Text("Modifica Utente")
-                }
-            }
-        }
-    }
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun VehicleRemoveSection(
-    snackbarHostState: SnackbarHostState,
-    selectedVehicleForEdit: VehicleDestinationEntity?,
-    onVehicleEdit: (VehicleDestinationEntity?) -> Unit,
-    onEditComplete: () -> Unit
-) {
-    val vehicleVm = viewModel<VehicleVm>()
-    val vehicles by vehicleVm.vehicles.collectAsStateWithLifecycle(emptyList())
-    var selectedVehicle by remember { mutableStateOf<VehicleDestinationEntity?>(null) }
-    val coroutineScope = rememberCoroutineScope()
-
-    if (selectedVehicleForEdit != null) {
-        Column(
-            modifier = Modifier.fillMaxWidth().padding(16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            VehicleAddSection(snackbarHostState, selectedVehicleForEdit, onEditComplete)
-            Spacer(modifier = Modifier.height(16.dp))
-            Button(
-                onClick = onEditComplete,
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.error
-                ),
-            ) {
-                Text("Annulla Modifica")
-            }
-        }
-    } else {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            Text("Rimuovi o Modifica un Veicolo", style = MaterialTheme.typography.titleLarge)
-            GenericExposedDropdownMenu(
-                items = vehicles,
-                selectedItem = selectedVehicle,
-                onItemSelected = { selectedVehicle = it },
-                itemText = { it.vehicleName },
-                label = "Seleziona Veicolo",
-                modifier = Modifier.widthIn(max = 400.dp)
-            )
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(16.dp)
-            ) {
-                Button(
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.error
-                    ),
-                    onClick = {
-                        selectedVehicle?.let { vehicle ->
-                            vehicleVm.removeVehicle(vehicle.vehiclePlate)
-                            selectedVehicle = null
-                            coroutineScope.launch {
-                                snackbarHostState.showSnackbar("Veicolo rimosso con successo!")
-                            }
-                        }
-                    },
-                    enabled = selectedVehicle != null,
-                ) {
-                    Text("Rimuovi Veicolo")
-                }
-                Button(
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.tertiary
-                    ),
-                    onClick = {
-                        onVehicleEdit(selectedVehicle)
-                    },
-                    enabled = selectedVehicle != null,
-                ) {
-                    Text("Modifica Veicolo")
-                }
-            }
-        }
-    }
-}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -594,75 +582,19 @@ fun ProductRemoveSection(
     onEditComplete: () -> Unit
 ) {
     val productVm = viewModel<ProductVm>()
-    val products by productVm.displayProducts.collectAsStateWithLifecycle(emptyList())
-    var selectedProduct by remember { mutableStateOf<ProductEntity?>(null) }
-    val coroutineScope = rememberCoroutineScope()
 
-    if (selectedProductForEdit != null) {
-        Column(
-            modifier = Modifier.fillMaxWidth().padding(16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            ProductAddSection(snackbarHostState, selectedProductForEdit, onEditComplete)
-            Spacer(modifier = Modifier.height(16.dp))
-            Button(
-                onClick = onEditComplete,
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.error
-                ),
-            ) {
-                Text("Annulla Modifica")
-            }
-        }
-    } else {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            Text("Rimuovi o Modifica un Prodotto", style = MaterialTheme.typography.titleLarge)
-            GenericExposedDropdownMenu(
-                items = products,
-                selectedItem = selectedProduct,
-                onItemSelected = { selectedProduct = it },
-                itemText = { "${it.title} \n ${it.content}" },
-                label = "Seleziona Prodotto",
-                modifier = Modifier.widthIn(max = 400.dp)
-            )
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(16.dp)
-            ) {
-                Button(
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.error
-                    ),
-                    onClick = {
-                        selectedProduct?.let { product ->
-                            productVm.removeProduct(product.id)
-                            selectedProduct = null
-                            coroutineScope.launch {
-                                snackbarHostState.showSnackbar("Prodotto rimosso con successo!")
-                            }
-                        }
-                    },
-                    enabled = selectedProduct != null,
-                ) {
-                    Text("Rimuovi Prodotto")
-                }
-                Button(
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.tertiary
-                    ),
-                    onClick = {
-                        onProductEdit(selectedProduct)
-                    },
-                    enabled = selectedProduct != null,
-                ) {
-                    Text("Modifica Prodotto")
-                }
-            }
-        }
-    }
+    BaseRemoveTab(
+        title = "Rimuovi o Modifica un Prodotto",
+        listFlow = productVm.displayProducts,
+        selectedItemForEdit = selectedProductForEdit,
+        onEdit = onProductEdit,
+        onEditComplete = onEditComplete,
+        onRemove = { productVm.removeProduct(it.id) },
+        itemText = { "${it.title} \n ${it.content}" },
+        addEditContent = { product, onComplete ->
+            ProductAddSection(snackbarHostState, product, onComplete)
+        },
+        snackbarHostState = snackbarHostState,
+        snackbarMessage = { "Prodotto rimosso con successo!" }
+    )
 }
