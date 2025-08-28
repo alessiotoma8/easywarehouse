@@ -429,9 +429,12 @@ fun VehicleAddSection(
         fields = fields,
         saveAction = {
             if (vehicleToEdit == null) {
-                vehicleVm.addVehicle(vehiclePlateState.value, vehicleNameState.value)
+                vehicleVm.addVehicle(plate = vehiclePlateState.value, name = vehicleNameState.value)
             } else {
-                vehicleVm.updateVehicle(vehicleToEdit.vehiclePlate, vehicleNameState.value)
+                vehicleVm.updateVehicle(
+                    plate = vehicleToEdit.vehiclePlate,
+                    name = vehicleNameState.value
+                )
             }
             vehiclePlateState.value = ""
             vehicleNameState.value = ""
