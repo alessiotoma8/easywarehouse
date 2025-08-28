@@ -77,13 +77,17 @@ class ReportVm : ViewModel() {
                                 it.productTitle.contains(query, ignoreCase = true) ||
                                 it.productUtility.displayName.contains(query, ignoreCase = true) ||
                                 it.employeeName.contains(query, ignoreCase = true) ||
-                                it.vehicleName?.contains(query, ignoreCase = true) ?: false||
-                                it.vehiclePlate?.contains(query, ignoreCase = true) ?: false||
+                                it.vehicleName?.contains(query, ignoreCase = true) ?: false ||
+                                it.vehiclePlate?.contains(query, ignoreCase = true) ?: false ||
                                 it.employeeSurname.contains(query, ignoreCase = true)
                     }
                 }
             } ?: periodFIlteredReport
-        }.stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
+        }.stateIn(
+            viewModelScope,
+            SharingStarted.WhileSubscribed(5000),
+            emptyList()
+        )
 
 
     @OptIn(ExperimentalTime::class)
@@ -132,7 +136,11 @@ class ReportVm : ViewModel() {
                         it.copy(totalCount = abs(it.totalCount))
                     }
             }
-    }.stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
+    }.stateIn(
+        viewModelScope,
+        SharingStarted.WhileSubscribed(5000),
+        emptyList()
+    )
 
     fun filterByDatePeriod(period: DateTimePeriod?) = viewModelScope.launch {
         _selectedDatePeriod.emit(period)

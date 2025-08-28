@@ -2,12 +2,13 @@ package easy.warehouse.product
 
 import androidx.room.Dao
 import androidx.room.Insert
+import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface ProductDao {
-    @Insert
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(item: ProductEntity)
 
     @Query("SELECT count(*) FROM ProductEntity")
@@ -15,6 +16,9 @@ interface ProductDao {
 
     @Query("SELECT * FROM ProductEntity")
     fun getAllAsFlow(): Flow<List<ProductEntity>>
+
+    @Query("SELECT * FROM ProductEntity")
+    suspend fun getAll(): List<ProductEntity>
 
     @Query("SELECT * FROM ProductEntity WHERE id = :id")
     suspend fun getById(id: Long): ProductEntity?

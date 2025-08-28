@@ -3,12 +3,10 @@ package easy.warehouse.product
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import easy.warehouse.db.getRoomDatabase
-import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.channelFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -24,6 +22,7 @@ data class PendingChange(
 
 class ProductVm : ViewModel() {
     private val dbRepo = getRoomDatabase().getProductDao()
+    private val reportDbRepo = getRoomDatabase().getReportDao()
 
     private val products = dbRepo.getAllAsFlow()
 
@@ -37,7 +36,12 @@ class ProductVm : ViewModel() {
     val selectedUtility = _selectedUtility.asStateFlow()
 
     val displayProducts: StateFlow<List<ProductEntity>> =
-        combine(products, pendingChanges, searchQuery,selectedUtility) { dbProducts, changes, query, utilityQuery ->
+        combine(
+            products,
+            pendingChanges,
+            searchQuery,
+            selectedUtility
+        ) { dbProducts, changes, query, utilityQuery ->
             val updatedProducts = dbProducts.map { product ->
                 val pendingChange = changes[product.id]
                 if (pendingChange != null) {
@@ -54,9 +58,9 @@ class ProductVm : ViewModel() {
                     updatedProducts.filter { it.title.contains(query, ignoreCase = true) }
                 }
             }
-            utilityQuery?.let{utility->
+            utilityQuery?.let { utility ->
                 queryProducts.filter { it.utility == utility }
-            }?:queryProducts
+            } ?: queryProducts
 
         }.stateIn(
             scope = viewModelScope,
@@ -122,6 +126,22 @@ class ProductVm : ViewModel() {
         dbRepo.insert(product)
     }
 
+    fun updateProduct(product: ProductEntity) = viewModelScope.launch {
+        dbRepo.insert(product)
+
+        val reports = reportDbRepo.getAllReportsList()
+        reports.filter { it.productId == product.id }.forEach { report ->
+            val newReport = report.copy(
+                productTitle = product.title,
+                productDesc = product.content,
+                productUtility = product.utility,
+                productCountChange = product.count
+            )
+            newReport.let { reportDbRepo.insertReport(it) }
+        }
+
+    }
+
     fun removeProduct(id: Long) = viewModelScope.launch {
         dbRepo.deleteById(id)
         val currentChanges = _pendingChanges.value.toMutableMap()
@@ -129,7 +149,7 @@ class ProductVm : ViewModel() {
         _pendingChanges.value = currentChanges
     }
 
-    fun toggleUtilityFilter(utility:Utility?){
+    fun toggleUtilityFilter(utility: Utility?) {
         _selectedUtility.value = utility
     }
 

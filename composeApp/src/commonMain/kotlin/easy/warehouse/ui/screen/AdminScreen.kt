@@ -39,7 +39,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import easy.warehouse.destination.VehicleDestinationEntity
 import easy.warehouse.destination.VehicleVm
@@ -150,12 +149,14 @@ fun AdminScreen(onLogoutClick: () -> Unit = {}, onReportClick: () -> Unit = {}) 
                                 onEmployeeEdit = { selectedEmployeeForEdit = it },
                                 onEditComplete = { selectedEmployeeForEdit = null }
                             )
+
                             1 -> VehicleRemoveSection(
                                 snackbarHostState,
                                 selectedVehicleForEdit,
                                 onVehicleEdit = { selectedVehicleForEdit = it },
                                 onEditComplete = { selectedVehicleForEdit = null }
                             )
+
                             2 -> ProductRemoveSection(
                                 snackbarHostState,
                                 selectedProductForEdit,
@@ -254,7 +255,7 @@ fun <T> BaseRemoveTab(
     onEdit: (T?) -> Unit,
     onEditComplete: () -> Unit,
     onRemove: (T) -> Unit,
-    itemText:  (T) -> String,
+    itemText: (T) -> String,
     addEditContent: @Composable (T?, () -> Unit) -> Unit,
     snackbarHostState: SnackbarHostState,
     snackbarMessage: (T) -> String,
@@ -343,7 +344,7 @@ fun <T> BaseRemoveTab(
 fun UserAddSection(
     snackbarHostState: SnackbarHostState,
     employeeToEdit: EmployeeEntity? = null,
-    onEditComplete: () -> Unit = {}
+    onEditComplete: () -> Unit = {},
 ) {
     val employeeVm = viewModel<EmployeeVm>()
     val nameState = remember { mutableStateOf(employeeToEdit?.name ?: "") }
@@ -361,8 +362,11 @@ fun UserAddSection(
             if (employeeToEdit == null) {
                 employeeVm.addEmployee(nameState.value, surnameState.value)
             } else {
-                // TODO: Implement update logic
-                // employeeVm.updateEmployee(employeeToEdit.id, nameState.value, surnameState.value)
+                employeeVm.updateEmployee(
+                    name = nameState.value,
+                    surname = surnameState.value,
+                    id = employeeToEdit.id,
+                )
             }
             nameState.value = ""
             surnameState.value = ""
@@ -380,7 +384,7 @@ fun UserRemoveSection(
     snackbarHostState: SnackbarHostState,
     selectedEmployeeForEdit: EmployeeEntity?,
     onEmployeeEdit: (EmployeeEntity?) -> Unit,
-    onEditComplete: () -> Unit
+    onEditComplete: () -> Unit,
 ) {
     val employeeVm = viewModel<EmployeeVm>()
 
@@ -409,7 +413,7 @@ fun UserRemoveSection(
 fun VehicleAddSection(
     snackbarHostState: SnackbarHostState,
     vehicleToEdit: VehicleDestinationEntity? = null,
-    onEditComplete: () -> Unit = {}
+    onEditComplete: () -> Unit = {},
 ) {
     val vehicleVm = viewModel<VehicleVm>()
     val vehiclePlateState = remember { mutableStateOf(vehicleToEdit?.vehiclePlate ?: "") }
@@ -427,8 +431,7 @@ fun VehicleAddSection(
             if (vehicleToEdit == null) {
                 vehicleVm.addVehicle(vehiclePlateState.value, vehicleNameState.value)
             } else {
-                // TODO: Implement update logic
-                // vehicleVm.updateVehicle(vehicleToEdit.vehiclePlate, vehicleNameState.value)
+                vehicleVm.updateVehicle(vehicleToEdit.vehiclePlate, vehicleNameState.value)
             }
             vehiclePlateState.value = ""
             vehicleNameState.value = ""
@@ -446,7 +449,7 @@ fun VehicleRemoveSection(
     snackbarHostState: SnackbarHostState,
     selectedVehicleForEdit: VehicleDestinationEntity?,
     onVehicleEdit: (VehicleDestinationEntity?) -> Unit,
-    onEditComplete: () -> Unit
+    onEditComplete: () -> Unit,
 ) {
     val vehicleVm = viewModel<VehicleVm>()
 
@@ -475,7 +478,7 @@ fun VehicleRemoveSection(
 fun ProductAddSection(
     snackbarHostState: SnackbarHostState,
     productToEdit: ProductEntity? = null,
-    onEditComplete: () -> Unit = {}
+    onEditComplete: () -> Unit = {},
 ) {
     val productVm = viewModel<ProductVm>()
     val titleState = remember { mutableStateOf(productToEdit?.title ?: "") }
@@ -493,7 +496,10 @@ fun ProductAddSection(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        Text(if (productToEdit == null) "Inserisci un nuovo Prodotto" else "Modifica Prodotto", style = MaterialTheme.typography.titleLarge)
+        Text(
+            if (productToEdit == null) "Inserisci un nuovo Prodotto" else "Modifica Prodotto",
+            style = MaterialTheme.typography.titleLarge
+        )
         OutlinedTextField(
             value = titleState.value,
             onValueChange = { titleState.value = it },
@@ -548,13 +554,14 @@ fun ProductAddSection(
                             )
                         )
                     } else {
-                        // TODO: Implement update logic
-                        // productVm.updateProduct(
-                        //     productToEdit.id,
-                        //     content = contentState.value,
-                        //     count = countState.value.toIntOrNull() ?: 0,
-                        //     utility = utility ?: Utility.ALTRI
-                        // )
+                        val productEntity = ProductEntity(
+                            id = productToEdit.id,
+                            title = titleState.value,
+                            content = contentState.value,
+                            count = countState.value.toIntOrNull() ?: 0,
+                            utility = utility ?: Utility.ALTRI
+                        )
+                        productVm.updateProduct(productEntity)
                     }
                     titleState.value = ""
                     contentState.value = ""
@@ -579,7 +586,7 @@ fun ProductRemoveSection(
     snackbarHostState: SnackbarHostState,
     selectedProductForEdit: ProductEntity?,
     onProductEdit: (ProductEntity?) -> Unit,
-    onEditComplete: () -> Unit
+    onEditComplete: () -> Unit,
 ) {
     val productVm = viewModel<ProductVm>()
 
