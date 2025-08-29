@@ -20,6 +20,8 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
@@ -28,6 +30,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -46,6 +49,7 @@ import easy.warehouse.ui.JvmDatePicker
 import easy.warehouse.ui.ScreenContent
 import easy.warehouse.ui.SearchBar
 import easy.warehouse.ui.WAppBar
+import kotlinx.coroutines.launch
 import kotlinx.datetime.DateTimePeriod
 import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.LocalDate
@@ -67,30 +71,74 @@ fun ReportsScreen(onBackClick: () -> Unit) {
     val tabs = listOf("Report", "Inventario Utenti")
     var selectedTabIndex by remember { mutableStateOf(0) }
 
+    val snackbarHostState = remember { SnackbarHostState() }
+    val coroutineScope = rememberCoroutineScope()
+
     Scaffold(
         topBar = {
             WAppBar("Gestione Magazzino", onBackClick)
-        }
+        },
+        snackbarHost = { SnackbarHost(snackbarHostState) }
     ) { innerPadding ->
-        ScreenContent(innerPadding) {
-            TabRow(selectedTabIndex = selectedTabIndex) {
-                tabs.forEachIndexed { index, title ->
-                    Tab(
-                        selected = selectedTabIndex == index,
-                        onClick = { selectedTabIndex = index },
-                        text = { Text(title) }
+        Box {
+            ScreenContent(innerPadding) {
+                TabRow(selectedTabIndex = selectedTabIndex) {
+                    tabs.forEachIndexed { index, title ->
+                        Tab(
+                            selected = selectedTabIndex == index,
+                            onClick = { selectedTabIndex = index },
+                            text = { Text(title) }
+                        )
+                    }
+                }
+                when (selectedTabIndex) {
+                    0 -> ReportsContent(
+                        reportVm = reportVm, reports = reports
+                    )
+
+                    1 -> UserInventoryScreen(
+                        userInventory
                     )
                 }
             }
-            when (selectedTabIndex) {
-                0 -> ReportsContent(
-                    reportVm = reportVm,
-                    reports = reports
-                )
 
-                1 -> UserInventoryScreen(
-                    userInventory
+
+            Card(
+                modifier = Modifier.width(450.dp).align(Alignment.BottomEnd).padding(16.dp),
+                elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.surfaceContainerHigh
                 )
+            ) {
+                Column(
+                    modifier = Modifier.padding(20.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Text("Report Export", style = MaterialTheme.typography.titleLarge)
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Button(
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = MaterialTheme.colorScheme.tertiary
+                            ),
+                            onClick = {
+                                openDbReportsFolder()
+                            }
+                        ) {
+                            Text("Apri cartella export")
+                        }
+
+                        Button(
+                            onClick = {
+                                reportVm.exportReport()
+                            }
+                        ) {
+                            Text("Esporta ${reports.size} Report")
+                            coroutineScope.launch {
+                                snackbarHostState.showSnackbar("Esportazione di ${reports.size} report eseguita!")
+                            }
+                        }
+                    }
+                }
             }
         }
     }
@@ -103,55 +151,19 @@ private fun ReportsContent(
     reports: List<ReportEntity>,
 ) {
     val filteredReports = reports
-    Box {
-        Column(
-            modifier = Modifier.fillMaxSize(),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            ReportSearch(reportVm)
-            Text(text = "Risultati trovati: (${filteredReports.size})")
-            LazyColumn {
-                stickyHeader {
-                    ReportsHeader()
-                }
-                itemsIndexed(filteredReports) { index, item ->
-                    ReportRow(item, index)
-                }
+
+    Column(
+        modifier = Modifier.fillMaxSize(),
+        verticalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
+        ReportSearch(reportVm)
+        Text(text = "Risultati trovati: (${filteredReports.size})")
+        LazyColumn {
+            stickyHeader {
+                ReportsHeader()
             }
-        }
-
-        Card(
-            modifier = Modifier.width(450.dp).align(Alignment.BottomEnd).padding(16.dp),
-            elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
-            colors = CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.surfaceContainerHigh
-            )
-        ) {
-            Column(
-                modifier = Modifier.padding(20.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                Text("Report Export", style = MaterialTheme.typography.titleLarge)
-                Row {
-                    Button(
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = MaterialTheme.colorScheme.tertiary
-                        ),
-                        onClick = {
-                            openDbReportsFolder()
-                        }
-                    ) {
-                        Text("Apri cartella export")
-                    }
-
-                    Button(
-                        onClick = {
-                            reportVm.exportReport()
-                        }
-                    ) {
-                        Text("Esporta ${reports.size} Report")
-                    }
-                }
+            itemsIndexed(filteredReports) { index, item ->
+                ReportRow(item, index)
             }
         }
     }
@@ -330,7 +342,12 @@ private fun ReportRow(report: ReportEntity, index: Int) {
 }
 
 @Composable
-private fun RowScope.HeaderCell(text: String, weight: Float, alignRight: Boolean = false, color: Color = MaterialTheme.colorScheme.onBackground) {
+private fun RowScope.HeaderCell(
+    text: String,
+    weight: Float,
+    alignRight: Boolean = false,
+    color: Color = MaterialTheme.colorScheme.onBackground,
+) {
     Text(
         text = text,
         modifier = Modifier.weight(weight),
@@ -341,7 +358,12 @@ private fun RowScope.HeaderCell(text: String, weight: Float, alignRight: Boolean
 }
 
 @Composable
-private fun RowScope.Cell(text: String, weight: Float, alignRight: Boolean = false, color: Color = MaterialTheme.colorScheme.onBackground) {
+private fun RowScope.Cell(
+    text: String,
+    weight: Float,
+    alignRight: Boolean = false,
+    color: Color = MaterialTheme.colorScheme.onBackground,
+) {
     Text(
         text = text,
         modifier = Modifier.weight(weight),
