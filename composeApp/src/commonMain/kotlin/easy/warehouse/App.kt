@@ -17,6 +17,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import easy.ui.theme.AppTheme
 import easy.warehouse.report.ReportVm
@@ -43,15 +44,16 @@ fun App() {
 
     @Composable
     fun MyMonthlyTaskScreen(reportVm: ReportVm) {
+        val reportrs = reportVm.reports.collectAsStateWithLifecycle()
         LaunchedEffect(key1 = Unit) {
             while (true) {
                 val now = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())
 
                 // Controlla che sia il primo giorno del mese
-                val isFirstDayOfMonth = now.dayOfMonth == 1
+                val isFirstDayOfMonth = now.dayOfMonth == 29
 
                 // Controlla che l'ora sia 00
-                val isMidnight = now.hour == 0
+                val isMidnight = now.hour == 16
 
                 if (isFirstDayOfMonth && isMidnight) {
                     reportVm.filterByDatePeriod(DateTimePeriod(months = 1))
@@ -81,7 +83,7 @@ fun App() {
                 showReport = false
             }
 
-            MyMonthlyTaskScreen()
+            MyMonthlyTaskScreen(reportVm)
 
             if (showDialog) {
                 AlertDialog(
