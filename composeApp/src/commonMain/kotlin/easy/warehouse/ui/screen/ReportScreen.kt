@@ -66,9 +66,8 @@ import kotlin.time.Instant
 fun ReportsScreen(onBackClick: () -> Unit) {
     val reportVm = viewModel<ReportVm>()
     val reports by reportVm.reports.collectAsStateWithLifecycle()
-    val userInventory by reportVm.inventoryUser.collectAsStateWithLifecycle(emptyList())
 
-    val tabs = listOf("Report", "Inventario Utenti")
+    val tabs = listOf("Report")
     var selectedTabIndex by remember { mutableStateOf(0) }
 
     val snackbarHostState = remember { SnackbarHostState() }
@@ -94,10 +93,6 @@ fun ReportsScreen(onBackClick: () -> Unit) {
                 when (selectedTabIndex) {
                     0 -> ReportsContent(
                         reportVm = reportVm, reports = reports
-                    )
-
-                    1 -> UserInventoryScreen(
-                        userInventory
                     )
                 }
             }
@@ -372,69 +367,5 @@ private fun RowScope.Cell(
     )
 }
 
-@Composable
-fun UserInventoryScreen(inventory: List<InventoryItem>) {
 
-    if (inventory.isNotEmpty()) {
-        LazyColumn(modifier = Modifier.fillMaxSize()) {
-            stickyHeader {
-                UserInventoryHeader()
-            }
-            itemsIndexed(inventory) { index, item ->
-                UserInventoryRow(item = item, index = index)
-            }
-        }
-    } else {
-        Column(
-            modifier = Modifier.fillMaxSize(),
-            verticalArrangement = Arrangement.Center,
-            horizontalAlignment = androidx.compose.ui.Alignment.CenterHorizontally
-        ) {
-            Text(text = "Nessun dato di inventario disponibile.")
-        }
-    }
-}
 
-@Composable
-fun UserInventoryHeader() {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(MaterialTheme.colorScheme.primaryContainer)
-            .padding(vertical = 8.dp),
-        horizontalArrangement = Arrangement.spacedBy(4.dp)
-    ) {
-        HeaderCell("Dipendente", weight = 2f)
-        HeaderCell("Prodotto", weight = 2f)
-        HeaderCell("Desc prodotto", weight = 2f)
-        HeaderCell("Settore prodotto", weight = 1f)
-        HeaderCell("Nome veicolo", weight = 1f)
-        HeaderCell("Targa veicolo", weight = 1f)
-        HeaderCell("Quantità", weight = 1f, alignRight = true)
-    }
-}
-
-@Composable
-fun UserInventoryRow(item: InventoryItem, index: Int) {
-    val backgroundColor = if (index % 2 == 0) {
-        MaterialTheme.colorScheme.surfaceVariant
-    } else {
-        MaterialTheme.colorScheme.background
-    }
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(backgroundColor)
-            .padding(vertical = 4.dp),
-        horizontalArrangement = Arrangement.spacedBy(4.dp)
-    ) {
-        Cell("${item.employeeName} ${item.employeeSurname}", weight = 2f)
-        Cell(item.productTitle, weight = 2f)
-        Cell(item.productDesc ?: "-", weight = 2f)
-        Cell(item.productUtility, weight = 1f)
-        Cell(item.vehicleName ?: "-", weight = 1f)
-        Cell(item.vehiclePlate ?: "-", weight = 1f)
-        Cell(item.totalCount.toString(), weight = 1f, alignRight = true)
-    }
-    Divider(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f))
-}

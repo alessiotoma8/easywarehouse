@@ -136,32 +136,6 @@ class ReportVm : ViewModel() {
             reportRepo.insertReport(report)
         }
 
-    val inventoryUser = reportRepo.getAllReports().map { report ->
-        report.groupBy { it.employeeId }
-            .flatMap { (_, userReports) ->
-                userReports
-                    .groupBy { it.productId }
-                    .map { (product, productReports) ->
-                        InventoryItem(
-                            employeeName = userReports.first().employeeName,
-                            employeeSurname = userReports.first().employeeSurname,
-                            productTitle = userReports.first().productTitle,
-                            productDesc = userReports.first()?.productDesc,
-                            productUtility = userReports.first().productUtility.displayName,
-                            vehiclePlate = userReports.first().vehiclePlate,
-                            vehicleName = userReports.first().vehicleName,
-                            totalCount = productReports.sumOf { it.productCountChange } // somma dei deltaù
-                        )
-                    }.filter { it.totalCount < 0 }.map {
-                        it.copy(totalCount = abs(it.totalCount))
-                    }
-            }
-    }.stateIn(
-        viewModelScope,
-        SharingStarted.WhileSubscribed(5000),
-        emptyList()
-    )
-
     fun filterByDatePeriod(period: DateTimePeriod?) = viewModelScope.launch {
         clearDateRange()
         _selectedDatePeriod.emit(period)
