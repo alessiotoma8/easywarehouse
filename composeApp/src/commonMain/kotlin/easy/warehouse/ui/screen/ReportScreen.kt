@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -34,10 +35,12 @@ import easy.warehouse.report.InventoryItem
 import easy.warehouse.report.ReportEntity
 import easy.warehouse.report.ReportVm
 import easy.warehouse.report.getLocalDateTime
+import easy.warehouse.ui.JvmDatePicker
 import easy.warehouse.ui.ScreenContent
 import easy.warehouse.ui.SearchBar
 import easy.warehouse.ui.WAppBar
 import kotlinx.datetime.DateTimePeriod
+import kotlinx.datetime.LocalDate
 import kotlin.time.ExperimentalTime
 
 
@@ -159,9 +162,21 @@ fun ReportSearch(reportVm: ReportVm) {
             )
         }
 
-        val dateRangeState = rememberDateRangePickerState()
-        DateRangePicker(
-            dateRangeState
+        Spacer(modifier = Modifier.weight(1f))
+
+        var selectedStartDate by remember { mutableStateOf<LocalDate?>(null) }
+        var selectedEndDate by remember { mutableStateOf<LocalDate?>(null) }
+
+        JvmDatePicker(
+            selectedDate = selectedStartDate,
+            onDateSelected = { selectedStartDate = it },
+            label = "Data inizio"
+        )
+
+        JvmDatePicker(
+            selectedDate = selectedEndDate,
+            onDateSelected = { selectedEndDate = it },
+            label = "Data fine"
         )
     }
 
