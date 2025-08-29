@@ -288,7 +288,7 @@ fun <T> BaseRemoveTab(
                 .fillMaxWidth()
                 .padding(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+            verticalArrangement = Arrangement.spacedBy(32.dp)
         ) {
             Text(title, style = MaterialTheme.typography.titleLarge)
             GenericExposedDropdownMenu(
@@ -297,8 +297,8 @@ fun <T> BaseRemoveTab(
                 onItemSelected = { selectedItem = it },
                 itemText = { itemText(it) },
                 label = "Seleziona",
-                modifier = Modifier.widthIn(max = 400.dp)
             )
+
             Row(
                 horizontalArrangement = Arrangement.spacedBy(16.dp)
             ) {
@@ -539,9 +539,6 @@ fun ProductAddSection(
             onItemSelected = { utility = it },
             itemText = { it.displayName },
             label = "Seleziona Settore",
-            modifier = Modifier
-                .widthIn(max = 400.dp)
-                .fillMaxWidth()
         )
 
 
@@ -573,8 +570,9 @@ fun ProductAddSection(
                     utility = null
                     coroutineScope.launch {
                         snackbarHostState.showSnackbar(if (productToEdit == null) "Prodotto aggiunto con successo!" else "Prodotto modificato con successo!")
+                        onEditComplete()
                     }
-                    onEditComplete()
+                    //onEditComplete()
                 }
             },
             enabled = titleState.value.isNotBlank() && countState.value.toIntOrNull() != null && utility != null,

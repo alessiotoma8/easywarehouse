@@ -12,10 +12,12 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -29,6 +31,7 @@ import androidx.compose.material3.FilterChip
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
@@ -250,7 +253,7 @@ fun ChangesSummary(
 fun UserSelection(
     employees: List<EmployeeEntity>,
     selectedEmployee: EmployeeEntity?,
-    onEmployeeSelected: (EmployeeEntity) -> Unit,
+    onEmployeeSelected: (EmployeeEntity?) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Column(modifier = modifier) {
@@ -270,7 +273,7 @@ fun UserSelection(
 fun DestinationSelection(
     vehicles: List<VehicleDestinationEntity>,
     selectedVehicle: VehicleDestinationEntity?,
-    onVehicleSelected: (VehicleDestinationEntity) -> Unit,
+    onVehicleSelected: (VehicleDestinationEntity?) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Column(modifier = modifier) {
@@ -294,10 +297,9 @@ fun DestinationSelection(
 fun <T> GenericExposedDropdownMenu(
     items: List<T>,
     selectedItem: T?,
-    onItemSelected: (T) -> Unit,
+    onItemSelected: (T?) -> Unit,
     itemText: (T) -> String,
     label: String = "Seleziona Elemento",
-    modifier: Modifier = Modifier,
     isError: Boolean = false,
 ) {
     var expanded by remember { mutableStateOf(false) }
@@ -307,57 +309,77 @@ fun <T> GenericExposedDropdownMenu(
         else items.filter { itemText(it).contains(searchQuery, ignoreCase = true) }
     }
     val searchFocusRequester = remember { FocusRequester() }
-    ExposedDropdownMenuBox(
-        expanded = expanded,
-        onExpandedChange = { expanded = !expanded },
-        modifier = modifier.clip(MaterialTheme.shapes.extraSmall),
-    ) {
-        TextField(
-            readOnly = true,
-            value = selectedItem?.let(itemText) ?: "",
-            onValueChange = {},
-            label = { Text(label) },
-            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
-            colors = ExposedDropdownMenuDefaults.textFieldColors(),
-            modifier = Modifier.menuAnchor(),
-            isError = isError
-        )
-        ExposedDropdownMenu(
+
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        ExposedDropdownMenuBox(
             expanded = expanded,
-            onDismissRequest = {
-                expanded = false
-                searchQuery = ""
-            }
+            onExpandedChange = { expanded = !expanded },
+            modifier = Modifier
+                .clip(MaterialTheme.shapes.extraSmall),
         ) {
-            LaunchedEffect(expanded) {
-                if (expanded) {
-                    searchFocusRequester.requestFocus()
+            TextField(
+                readOnly = true,
+                value = selectedItem?.let(itemText) ?: "",
+                onValueChange = {},
+                label = { Text(label) },
+                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
+                colors = ExposedDropdownMenuDefaults.textFieldColors(),
+                modifier = Modifier.menuAnchor(),
+                isError = isError
+            )
+            ExposedDropdownMenu(
+                expanded = expanded,
+                onDismissRequest = {
+                    expanded = false
+                    searchQuery = ""
+                }
+            ) {
+                LaunchedEffect(expanded) {
+                    if (expanded) {
+                        searchFocusRequester.requestFocus()
+                    }
+                }
+                TextField(
+                    value = searchQuery,
+                    onValueChange = { searchQuery = it },
+                    placeholder = { Text("Cerca...") },
+                    singleLine = true,
+                    leadingIcon = { Icon(Icons.Default.Search, contentDescription = "Cerca") },
+                    modifier = Modifier
+                        .padding(8.dp)
+                        .focusRequester(searchFocusRequester)
+                )
+                filteredItems.forEachIndexed { _, item ->
+                    DropdownMenuItem(
+                        text = { Text(itemText(item)) },
+                        onClick = {
+                            onItemSelected(item)
+                            expanded = false
+                            searchQuery = ""
+                        },
+                        contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding
+                    )
+                    if (filteredItems.indexOf(item) != filteredItems.count() - 1) {
+                        HorizontalDivider()
+                    }
                 }
             }
-            TextField(
-                value = searchQuery,
-                onValueChange = { searchQuery = it },
-                placeholder = { Text("Cerca...") },
-                singleLine = true,
-                leadingIcon = { Icon(Icons.Default.Search, contentDescription = "Cerca") },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(8.dp)
-                    .focusRequester(searchFocusRequester)
-            )
-            filteredItems.forEachIndexed { _, item ->
-                DropdownMenuItem(
-                    text = { Text(itemText(item)) },
-                    onClick = {
-                        onItemSelected(item)
-                        expanded = false
-                        searchQuery = ""
-                    },
-                    contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding
+        }
+        if (selectedItem != null) {
+            Spacer(modifier = Modifier.width(8.dp))
+            IconButton(
+                onClick = {
+                    onItemSelected(null)
+                    expanded = false
+                },
+                modifier = Modifier.size(32.dp),
+                colors = IconButtonDefaults.iconButtonColors(containerColor = MaterialTheme.colorScheme.error)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Clear,
+                    contentDescription = "Cancella selezione",
+                    tint =  MaterialTheme.colorScheme.onError
                 )
-                if (filteredItems.indexOf(item) != filteredItems.count() - 1) {
-                    HorizontalDivider()
-                }
             }
         }
     }
