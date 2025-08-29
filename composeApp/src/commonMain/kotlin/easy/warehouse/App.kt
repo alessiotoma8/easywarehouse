@@ -17,19 +17,49 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.lifecycle.viewmodel.compose.viewModel
 import easy.ui.theme.AppTheme
+import easy.warehouse.report.ReportVm
 import easy.warehouse.ui.screen.AdminScreen
 import easy.warehouse.ui.screen.WarehouseScreen
 import kotlinx.coroutines.delay
+import kotlinx.datetime.DateTimePeriod
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toLocalDateTime
+import kotlinx.datetime.todayIn
+import kotlin.time.Clock
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
+import kotlin.time.ExperimentalTime
 
+@OptIn(ExperimentalTime::class)
 @Composable
 fun App() {
     var showDialog by remember { mutableStateOf(false) }
     var idleTriggered by remember { mutableStateOf(false) }
 
     var isAdmin by remember { mutableStateOf(false) }
+
+    val reportVm = viewModel<ReportVm>()
+
+    @Composable
+    fun MyMonthlyTaskScreen() {
+        LaunchedEffect(key1 = Unit) {
+            val now = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())
+
+            // Controlla che sia il primo giorno del mese
+            val isFirstDayOfMonth = now.dayOfMonth == 1
+
+            // Controlla che l'ora sia 00:00:01
+            val isMidnight = now.hour == 0 && now.minute == 0 && now.second == 1
+
+            if (isFirstDayOfMonth && isMidnight) {
+                reportVm.filterByDatePeriod(DateTimePeriod(months = 1))
+                reportVm.exportReport()
+                reportVm.filterByDatePeriod(null)
+            }
+        }
+    }
 
     AppTheme {
         Column(
@@ -46,6 +76,8 @@ fun App() {
                 isAdmin = false
                 showReport = false
             }
+
+            MyMonthlyTaskScreen()
 
             if (showDialog) {
                 AlertDialog(

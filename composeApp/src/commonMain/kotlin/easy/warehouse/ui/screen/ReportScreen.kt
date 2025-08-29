@@ -134,14 +134,6 @@ private fun ReportsContent(
                 Text("Report Export", style = MaterialTheme.typography.titleLarge)
                 Row {
                     Button(
-                        onClick = {
-                            reportVm.exportReport()
-                        }
-                    ) {
-                        Text("Esporta ${reports.size} Report")
-                    }
-
-                    Button(
                         colors = ButtonDefaults.buttonColors(
                             containerColor = MaterialTheme.colorScheme.tertiary
                         ),
@@ -150,6 +142,14 @@ private fun ReportsContent(
                         }
                     ) {
                         Text("Apri cartella export")
+                    }
+
+                    Button(
+                        onClick = {
+                            reportVm.exportReport()
+                        }
+                    ) {
+                        Text("Esporta ${reports.size} Report")
                     }
                 }
             }
