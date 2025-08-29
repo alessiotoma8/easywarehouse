@@ -1,8 +1,6 @@
 package easy.warehouse.data
 
-import easy.warehouse.report.ReportDao
 import easy.warehouse.report.ReportEntity
-import kotlinx.coroutines.flow.forEach
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 import kotlin.time.Clock
@@ -59,8 +57,8 @@ suspend fun exportDatabaseToCsv(reports: List<ReportEntity>) {
     val bytes = csv.encodeToByteArray()
     val dateTimeId = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())
     val formatted= "${dateTimeId.dayOfMonth}_${dateTimeId.monthNumber}_${dateTimeId.year}_${dateTimeId.hour}_${dateTimeId.minute}_${dateTimeId.second}"
-    saveToDownloads(fileName = "reports_export_$formatted.csv", content = bytes)
+    saveToUserHomeFolder(fileName = "reports_export_$formatted.csv", content = bytes)
 }
 
 // commonMain
-expect fun saveToDownloads(fileName: String, content: ByteArray)
+expect fun saveToUserHomeFolder(fileName: String, content: ByteArray)

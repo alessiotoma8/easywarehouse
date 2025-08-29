@@ -4,7 +4,7 @@ import java.nio.file.Files
 import java.nio.file.Paths
 
 
-actual fun saveToDownloads(fileName: String, content: ByteArray) {
+actual fun saveToUserHomeFolder(fileName: String, content: ByteArray) {
     val userHome = System.getProperty("user.home")
     val downloadsDir = Paths.get(userHome, "DbReports")
     if (!Files.exists(downloadsDir)) {
