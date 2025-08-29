@@ -50,10 +50,10 @@ fun App() {
                 val now = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())
 
                 // Controlla che sia il primo giorno del mese
-                val isFirstDayOfMonth = now.dayOfMonth == 29
+                val isFirstDayOfMonth = now.dayOfMonth == 1
 
                 // Controlla che l'ora sia 00
-                val isMidnight = now.hour == 16
+                val isMidnight = now.hour == 0
 
                 if (isFirstDayOfMonth && isMidnight) {
                     reportVm.filterByDatePeriod(DateTimePeriod(months = 1))
