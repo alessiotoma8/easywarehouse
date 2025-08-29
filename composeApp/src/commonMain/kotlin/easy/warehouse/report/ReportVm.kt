@@ -22,6 +22,7 @@ import kotlin.math.abs
 import kotlin.time.Clock
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.ExperimentalTime
+import kotlin.time.Instant
 
 data class InventoryItem(
     val employeeName: String,
@@ -47,16 +48,27 @@ class ReportVm : ViewModel() {
     private val _searchQuery = MutableStateFlow<String?>(null)
     val searchQuery = _searchQuery.asStateFlow()
 
+    private val _startDate = MutableStateFlow<kotlin.time.Instant?>(null)
+    private val _endDate = MutableStateFlow<kotlin.time.Instant?>(null)
+    val startDate = _startDate.asStateFlow()
+    val endDate = _endDate.asStateFlow()
+
     private val dbReports = reportRepo.getAllReports()
     val reports =
-        combine(dbReports, selectedDatePeriod, searchQuery) { reports, period, searchQuery ->
-            val periodFIlteredReport = period?.let {
+        combine(
+            dbReports,
+            startDate,
+            endDate,
+            selectedDatePeriod,
+            searchQuery
+        ) { reports, startDate, endDate, period, searchQuery ->
+            val periodFIlteredReport = if (period == null) reports
+            else {
                 val tz = TimeZone.currentSystemDefault()
                 val now = Clock.System.now()
 
                 val todayStart = now.toLocalDateTime(tz).date.atStartOfDayIn(tz)
-
-                val startInstant = todayStart.minus(it, tz)
+                val startInstant = todayStart.minus(period, tz)
 
                 val endInstant = todayStart
                     .plus(1, DateTimeUnit.DAY, tz)
@@ -66,23 +78,30 @@ class ReportVm : ViewModel() {
                     val instant = report.getInstant()
                     instant >= startInstant && instant <= endInstant
                 }
-            } ?: reports
+            }
 
-            searchQuery?.let { query ->
-                if (query.isBlank()) {
-                    periodFIlteredReport
-                } else {
-                    periodFIlteredReport.filter {
-                        it.productDesc?.contains(query, ignoreCase = true) ?: false ||
-                                it.productTitle.contains(query, ignoreCase = true) ||
-                                it.productUtility.displayName.contains(query, ignoreCase = true) ||
-                                it.employeeName.contains(query, ignoreCase = true) ||
-                                it.vehicleName?.contains(query, ignoreCase = true) ?: false ||
-                                it.vehiclePlate?.contains(query, ignoreCase = true) ?: false ||
-                                it.employeeSurname.contains(query, ignoreCase = true)
-                    }
+            val queryResult = if (searchQuery == null) periodFIlteredReport
+            else {
+                val query = searchQuery
+                periodFIlteredReport.filter {
+                    it.productDesc?.contains(query, ignoreCase = true) ?: false ||
+                            it.productTitle.contains(query, ignoreCase = true) ||
+                            it.productUtility.displayName.contains(query, ignoreCase = true) ||
+                            it.employeeName.contains(query, ignoreCase = true) ||
+                            it.vehicleName?.contains(query, ignoreCase = true) ?: false ||
+                            it.vehiclePlate?.contains(query, ignoreCase = true) ?: false ||
+                            it.employeeSurname.contains(query, ignoreCase = true)
                 }
-            } ?: periodFIlteredReport
+            }
+
+            val dateFilter = if (startDate == null || endDate == null) queryResult
+            else {
+                reports.filter { report ->
+                    val instant = report.getInstant()
+                    instant >= startDate && instant <= endDate
+                }
+            }
+            dateFilter
         }.stateIn(
             viewModelScope,
             SharingStarted.WhileSubscribed(5000),
@@ -143,11 +162,26 @@ class ReportVm : ViewModel() {
     )
 
     fun filterByDatePeriod(period: DateTimePeriod?) = viewModelScope.launch {
+        clearDateRange()
         _selectedDatePeriod.emit(period)
     }
 
     fun searchReport(str: String) = viewModelScope.launch {
         _selectedDatePeriod.emit(null)
         _searchQuery.value = str
+    }
+
+    fun filterByDateRange(startDate: Instant, endDate: Instant) = viewModelScope.launch {
+        _selectedDatePeriod.emit(null)
+        _searchQuery.emit(null)
+        _startDate.emit(startDate)
+        _endDate.emit(endDate)
+    }
+
+        fun clearDateRange(){
+        viewModelScope.launch {
+            _startDate.emit(null)
+            _endDate.emit(null)
+        }
     }
 }

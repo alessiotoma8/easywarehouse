@@ -21,6 +21,7 @@ import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberDateRangePickerState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -40,8 +41,15 @@ import easy.warehouse.ui.ScreenContent
 import easy.warehouse.ui.SearchBar
 import easy.warehouse.ui.WAppBar
 import kotlinx.datetime.DateTimePeriod
+import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.LocalDate
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.atStartOfDayIn
+import kotlinx.datetime.atTime
+import kotlinx.datetime.plus
+import kotlin.time.Duration.Companion.nanoseconds
 import kotlin.time.ExperimentalTime
+import kotlin.time.Instant
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -92,6 +100,7 @@ private fun ReportsContent(
     val filteredReports = reports
     Column(modifier = Modifier.fillMaxSize(), verticalArrangement = Arrangement.spacedBy(16.dp)) {
         ReportSearch(reportVm)
+        Text(text = "Risultati trovati: (${filteredReports.size})")
         LazyColumn {
             stickyHeader {
                 ReportsHeader()
@@ -103,7 +112,7 @@ private fun ReportsContent(
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalTime::class)
 @Composable
 fun ReportSearch(reportVm: ReportVm) {
     var searchQuery by remember { mutableStateOf("") }
@@ -178,9 +187,27 @@ fun ReportSearch(reportVm: ReportVm) {
             onDateSelected = { selectedEndDate = it },
             label = "Data fine"
         )
-    }
 
+        LaunchedEffect(selectedStartDate, selectedEndDate) {
+            if (selectedStartDate != null && selectedEndDate != null) {
+                reportVm.filterByDateRange(
+                    startDate = selectedStartDate!!.atStartOfDayIn(TimeZone.currentSystemDefault()),
+                    endDate = selectedEndDate!!.atEndOfDayIn(TimeZone.currentSystemDefault())
+                )
+            } else {
+                reportVm.clearDateRange()
+            }
+        }
+    }
 }
+
+@OptIn(ExperimentalTime::class)
+fun LocalDate.atEndOfDayIn(timeZone: TimeZone): Instant {
+    return this.atStartOfDayIn(timeZone)
+        .plus(1, DateTimeUnit.DAY, timeZone)
+        .minus(1.nanoseconds)
+}
+
 
 @Composable
 private fun ReportsHeader() {
