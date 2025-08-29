@@ -151,7 +151,8 @@ fun ProductItem(product: ProductEntity, productVm: ProductVm) {
                 Button(
                     onClick = { productVm.increaseCount(product.id) },
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.error
+                        containerColor = MaterialTheme.colorScheme.error,
+                        contentColor = MaterialTheme.colorScheme.onError
                     ),
                     shape = RoundedCornerShape(12.dp)
                 ) {
@@ -373,7 +374,10 @@ fun <T> GenericExposedDropdownMenu(
                     expanded = false
                 },
                 modifier = Modifier.size(32.dp),
-                colors = IconButtonDefaults.iconButtonColors(containerColor = MaterialTheme.colorScheme.error)
+                colors = IconButtonDefaults.iconButtonColors(
+                    containerColor = MaterialTheme.colorScheme.error,
+                    contentColor = MaterialTheme.colorScheme.onError
+                )
             ) {
                 Icon(
                     imageVector = Icons.Default.Clear,

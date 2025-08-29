@@ -1,39 +1,16 @@
 package easy.warehouse.ui.screen
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AddCircle
-import androidx.compose.material.icons.filled.RemoveCircle
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material3.*
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SnackbarHost
-import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.Tab
-import androidx.compose.material3.TabRow
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -62,35 +39,29 @@ data class Field<T>(
     val isEnabled: Boolean = true,
 )
 
-data class TabAction(
-    val title: String,
-    val icon: ImageVector,
-    val color: Color,
-)
-
 val Green2 = Color(0xFF4CAF50)
 val Red2 = Color(0xFFF44336)
+val Blue2 = Color(0xFF2196F3)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 @Preview
 fun AdminScreen(onLogoutClick: () -> Unit = {}, onReportClick: () -> Unit = {}) {
-    var selectedTabActionIndex by remember { mutableStateOf(0) }
-    val actions = listOf(
-        TabAction("Aggiungi", Icons.Default.AddCircle, Green2),
-        TabAction("Rimuovi/ Modifica", Icons.Default.RemoveCircle, Red2)
-    )
-
     var selectedTabIndex by remember { mutableStateOf(0) }
     val tabs = listOf("Utenti", "Veicoli", "Prodotti")
 
     val snackbarHostState = remember { SnackbarHostState() }
+    val coroutineScope = rememberCoroutineScope()
 
-    // States for managing edits
     var selectedEmployeeForEdit by remember { mutableStateOf<EmployeeEntity?>(null) }
     var selectedVehicleForEdit by remember { mutableStateOf<VehicleDestinationEntity?>(null) }
     var selectedProductForEdit by remember { mutableStateOf<ProductEntity?>(null) }
 
+    val showSnackbar: (String) -> Unit = { message ->
+        coroutineScope.launch {
+            snackbarHostState.showSnackbar(message)
+        }
+    }
 
     Scaffold(
         topBar = {
@@ -98,7 +69,8 @@ fun AdminScreen(onLogoutClick: () -> Unit = {}, onReportClick: () -> Unit = {}) 
                 Button(
                     onClick = onReportClick,
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.tertiary
+                        containerColor = MaterialTheme.colorScheme.tertiary,
+                        contentColor = MaterialTheme.colorScheme.onTertiary
                     ),
                 ) {
                     Text("Report")
@@ -107,85 +79,125 @@ fun AdminScreen(onLogoutClick: () -> Unit = {}, onReportClick: () -> Unit = {}) 
                 Button(
                     onClick = onLogoutClick,
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.error
+                        containerColor = MaterialTheme.colorScheme.error,
+                        contentColor = MaterialTheme.colorScheme.onError
                     ),
                 ) {
                     Text("Esci")
                 }
             }
         },
-        snackbarHost = { SnackbarHost(snackbarHostState) }
+        snackbarHost = {
+            SnackbarHost(
+                snackbarHostState,
+                modifier = Modifier.padding(16.dp)
+            )
+        }
     ) { innerPadding ->
         ScreenContent(innerPadding) {
-            TabRow(selectedTabIndex = selectedTabIndex) {
-                tabs.forEachIndexed { index, title ->
-                    Tab(
-                        selected = selectedTabIndex == index,
-                        onClick = { selectedTabIndex = index },
-                        text = { Text(title) }
-                    )
-                }
-            }
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            Box(
-                modifier = Modifier.weight(1f)
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(16.dp)
             ) {
-                when (selectedTabActionIndex) {
-                    0 -> {
-                        when (selectedTabIndex) {
-                            0 -> UserAddSection(snackbarHostState)
-                            1 -> VehicleAddSection(snackbarHostState)
-                            2 -> ProductAddSection(snackbarHostState)
-                        }
-                    }
-
-                    1 -> {
-                        when (selectedTabIndex) {
-                            0 -> UserRemoveSection(
-                                snackbarHostState,
-                                selectedEmployeeForEdit,
-                                onEmployeeEdit = { selectedEmployeeForEdit = it },
-                                onEditComplete = { selectedEmployeeForEdit = null }
-                            )
-
-                            1 -> VehicleRemoveSection(
-                                snackbarHostState,
-                                selectedVehicleForEdit,
-                                onVehicleEdit = { selectedVehicleForEdit = it },
-                                onEditComplete = { selectedVehicleForEdit = null }
-                            )
-
-                            2 -> ProductRemoveSection(
-                                snackbarHostState,
-                                selectedProductForEdit,
-                                onProductEdit = { selectedProductForEdit = it },
-                                onEditComplete = { selectedProductForEdit = null }
-                            )
-                        }
+                TabRow(selectedTabIndex = selectedTabIndex, modifier = Modifier.fillMaxWidth()) {
+                    tabs.forEachIndexed { index, title ->
+                        Tab(
+                            selected = selectedTabIndex == index,
+                            onClick = { selectedTabIndex = index },
+                            text = { Text(title) }
+                        )
                     }
                 }
-            }
-            TabRow(
-                selectedTabIndex = selectedTabActionIndex,
-                containerColor = MaterialTheme.colorScheme.surfaceVariant
-            ) {
-                actions.forEachIndexed { index, tabAction ->
-                    Tab(
-                        selected = selectedTabActionIndex == index,
-                        onClick = { selectedTabActionIndex = index },
-                        selectedContentColor = tabAction.color,
-                        unselectedContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.background(tabAction.color.copy(alpha = 0.2f))
+
+                Spacer(modifier = Modifier.height(24.dp))
+
+                Row(
+                    modifier = Modifier.fillMaxWidth().weight(1f),
+                    horizontalArrangement = Arrangement.spacedBy(32.dp)
+                ) {
+                    // Left Panel - Aggiungi
+                    Surface(
+                        modifier = Modifier.weight(1f),
+                        tonalElevation = 2.dp,
+                        shape = MaterialTheme.shapes.medium
                     ) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(4.dp),
-                            modifier = Modifier.padding(12.dp)
+                        Column(
+                            modifier = Modifier
+                                .padding(24.dp)
+                                .fillMaxHeight(),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.spacedBy(24.dp)
                         ) {
-                            Icon(imageVector = tabAction.icon, contentDescription = tabAction.title)
-                            Text(text = tabAction.title)
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.AddCircle,
+                                    contentDescription = "Aggiungi",
+                                    tint = Green2
+                                )
+                                Text("Aggiungi un nuovo elemento", style = MaterialTheme.typography.titleMedium)
+                            }
+                            when (selectedTabIndex) {
+                                0 -> UserAddSection(onEditComplete = showSnackbar)
+                                1 -> VehicleAddSection(onEditComplete = showSnackbar)
+                                2 -> ProductAddSection(onEditComplete = showSnackbar)
+                            }
+                        }
+                    }
+
+                    // Right Panel - Rimuovi / Modifica
+                    Surface(
+                        modifier = Modifier.weight(1f),
+                        tonalElevation = 2.dp,
+                        shape = MaterialTheme.shapes.medium
+                    ) {
+                        Column(
+                            modifier = Modifier
+                                .padding(24.dp)
+                                .fillMaxHeight(),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.spacedBy(24.dp)
+                        ) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Edit,
+                                    contentDescription = "Rimuovi/Modifica",
+                                    tint = Blue2
+                                )
+                                Text("Rimuovi o Modifica un elemento", style = MaterialTheme.typography.titleMedium)
+                            }
+                            when (selectedTabIndex) {
+                                0 -> UserRemoveSection(
+                                    selectedEmployeeForEdit,
+                                    onEmployeeEdit = { selectedEmployeeForEdit = it },
+                                    onEditComplete = {
+                                        selectedEmployeeForEdit = null
+                                        showSnackbar(it)
+                                    }
+                                )
+                                1 -> VehicleRemoveSection(
+                                    selectedVehicleForEdit,
+                                    onVehicleEdit = { selectedVehicleForEdit = it },
+                                    onEditComplete = {
+                                        selectedVehicleForEdit = null
+                                        showSnackbar(it)
+                                    }
+                                )
+                                2 -> ProductRemoveSection(
+                                    selectedProductForEdit,
+                                    onProductEdit = { selectedProductForEdit = it },
+                                    onEditComplete = {
+                                        selectedProductForEdit = null
+                                        showSnackbar(it)
+                                    }
+                                )
+                            }
                         }
                     }
                 }
@@ -205,38 +217,33 @@ fun BaseAddTab(
     fields: List<Field<String>>,
     saveAction: () -> Unit,
     saveButtonText: String,
-    snackbarHostState: SnackbarHostState,
+    onEditComplete: (String) -> Unit,
     snackbarMessage: String,
-) {
-    val coroutineScope = rememberCoroutineScope()
-
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(16.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(16.dp)
-    ) {
-        Text(title, style = MaterialTheme.typography.titleLarge)
+    editContent: @Composable () -> Unit = {
         fields.forEach { field ->
             OutlinedTextField(
                 value = field.state.value,
                 onValueChange = { field.state.value = it },
                 label = { Text(field.label) },
-                modifier = Modifier
-                    .widthIn(max = 400.dp)
-                    .fillMaxWidth(),
+                modifier = Modifier.fillMaxWidth(0.5f),
                 enabled = field.isEnabled
             )
         }
+    }
+) {
+    Column(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
+        Text(title, style = MaterialTheme.typography.titleLarge)
+        editContent()
         Button(
             onClick = {
                 val allFieldsFilled = fields.all { !it.isRequired || it.state.value.isNotBlank() }
                 if (allFieldsFilled) {
                     saveAction()
-                    coroutineScope.launch {
-                        snackbarHostState.showSnackbar(snackbarMessage)
-                    }
+                    onEditComplete(snackbarMessage)
                 }
             },
             enabled = fields.all { !it.isRequired || it.state.value.isNotBlank() }
@@ -253,40 +260,36 @@ fun <T> BaseRemoveTab(
     listFlow: Flow<List<T>>,
     selectedItemForEdit: T?,
     onEdit: (T?) -> Unit,
-    onEditComplete: () -> Unit,
+    onEditComplete: (String) -> Unit,
     onRemove: (T) -> Unit,
     itemText: (T) -> String,
-    addEditContent: @Composable (T?, () -> Unit) -> Unit,
-    snackbarHostState: SnackbarHostState,
+    addEditContent: @Composable (T?, (String) -> Unit) -> Unit,
     snackbarMessage: (T) -> String,
 ) {
     val items by listFlow.collectAsState(initial = emptyList())
     var selectedItem by remember { mutableStateOf<T?>(null) }
-    val coroutineScope = rememberCoroutineScope()
 
     if (selectedItemForEdit != null) {
         Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
+            modifier = Modifier.fillMaxWidth(),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             addEditContent(selectedItemForEdit, onEditComplete)
+            Spacer(Modifier.weight(0.3f))
             Spacer(modifier = Modifier.height(16.dp))
             Button(
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.error
+                    containerColor = MaterialTheme.colorScheme.error,
+                    contentColor = MaterialTheme.colorScheme.onError
                 ),
-                onClick = onEditComplete
+                onClick = { onEditComplete("Annullata modifica") }
             ) {
                 Text("Annulla Modifica")
             }
         }
     } else {
         Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
+            modifier = Modifier.fillMaxWidth(),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(32.dp)
         ) {
@@ -300,34 +303,38 @@ fun <T> BaseRemoveTab(
             )
 
             Row(
-                horizontalArrangement = Arrangement.spacedBy(16.dp)
+                horizontalArrangement = Arrangement.spacedBy(16.dp),
             ) {
                 Button(
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.error
+                        containerColor = MaterialTheme.colorScheme.error,
+                        contentColor = MaterialTheme.colorScheme.onError
                     ),
                     onClick = {
                         selectedItem?.let { item ->
                             onRemove(item)
                             selectedItem = null
-                            coroutineScope.launch {
-                                snackbarHostState.showSnackbar(snackbarMessage(item))
-                            }
+                            onEditComplete(snackbarMessage(item))
                         }
                     },
                     enabled = selectedItem != null,
                 ) {
+                    Icon(imageVector = Icons.Default.Delete, contentDescription = "Rimuovi")
+                    Spacer(Modifier.width(8.dp))
                     Text("Rimuovi")
                 }
                 Button(
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.tertiary
+                        containerColor = MaterialTheme.colorScheme.tertiary,
+                        contentColor = MaterialTheme.colorScheme.onTertiary
                     ),
                     onClick = {
                         onEdit(selectedItem)
                     },
                     enabled = selectedItem != null,
                 ) {
+                    Icon(imageVector = Icons.Default.Edit, contentDescription = "Modifica")
+                    Spacer(Modifier.width(8.dp))
                     Text("Modifica")
                 }
             }
@@ -339,12 +346,10 @@ fun <T> BaseRemoveTab(
 // USER SECTIONS
 // -------------------------------------------------------------------------------------------------
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun UserAddSection(
-    snackbarHostState: SnackbarHostState,
     employeeToEdit: EmployeeEntity? = null,
-    onEditComplete: () -> Unit = {},
+    onEditComplete: (String) -> Unit,
 ) {
     val employeeVm = viewModel<EmployeeVm>()
     val nameState = remember { mutableStateOf(employeeToEdit?.name ?: "") }
@@ -370,26 +375,23 @@ fun UserAddSection(
             }
             nameState.value = ""
             surnameState.value = ""
-            onEditComplete()
         },
         saveButtonText = if (employeeToEdit == null) "Aggiungi Utente" else "Salva Modifiche",
-        snackbarHostState = snackbarHostState,
+        onEditComplete = onEditComplete,
         snackbarMessage = if (employeeToEdit == null) "Utente aggiunto con successo!" else "Utente modificato con successo!"
     )
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun UserRemoveSection(
-    snackbarHostState: SnackbarHostState,
     selectedEmployeeForEdit: EmployeeEntity?,
     onEmployeeEdit: (EmployeeEntity?) -> Unit,
-    onEditComplete: () -> Unit,
+    onEditComplete: (String) -> Unit,
 ) {
     val employeeVm = viewModel<EmployeeVm>()
 
     BaseRemoveTab(
-        title = "Rimuovi o Modifica un Utente",
+        title = "Seleziona un Utente",
         listFlow = employeeVm.employees,
         selectedItemForEdit = selectedEmployeeForEdit,
         onEdit = onEmployeeEdit,
@@ -397,9 +399,8 @@ fun UserRemoveSection(
         onRemove = { employeeVm.removeEmployee(it.id) },
         itemText = { "${it.name} ${it.surname}" },
         addEditContent = { employee, onComplete ->
-            UserAddSection(snackbarHostState, employee, onComplete)
+            UserAddSection(employee, onComplete)
         },
-        snackbarHostState = snackbarHostState,
         snackbarMessage = { "Utente rimosso con successo!" }
     )
 }
@@ -408,12 +409,10 @@ fun UserRemoveSection(
 // VEHICLE SECTIONS
 // -------------------------------------------------------------------------------------------------
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun VehicleAddSection(
-    snackbarHostState: SnackbarHostState,
     vehicleToEdit: VehicleDestinationEntity? = null,
-    onEditComplete: () -> Unit = {},
+    onEditComplete: (String) -> Unit,
 ) {
     val vehicleVm = viewModel<VehicleVm>()
     val vehiclePlateState = remember { mutableStateOf(vehicleToEdit?.vehiclePlate ?: "") }
@@ -439,26 +438,23 @@ fun VehicleAddSection(
             }
             vehiclePlateState.value = ""
             vehicleNameState.value = ""
-            onEditComplete()
         },
         saveButtonText = if (vehicleToEdit == null) "Aggiungi Veicolo" else "Salva Modifiche",
-        snackbarHostState = snackbarHostState,
+        onEditComplete = onEditComplete,
         snackbarMessage = if (vehicleToEdit == null) "Veicolo aggiunto con successo!" else "Veicolo modificato con successo!"
     )
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun VehicleRemoveSection(
-    snackbarHostState: SnackbarHostState,
     selectedVehicleForEdit: VehicleDestinationEntity?,
     onVehicleEdit: (VehicleDestinationEntity?) -> Unit,
-    onEditComplete: () -> Unit,
+    onEditComplete: (String) -> Unit,
 ) {
     val vehicleVm = viewModel<VehicleVm>()
 
     BaseRemoveTab(
-        title = "Rimuovi o Modifica un Veicolo",
+        title = "Seleziona un Veicolo",
         listFlow = vehicleVm.vehicles,
         selectedItemForEdit = selectedVehicleForEdit,
         onEdit = onVehicleEdit,
@@ -466,9 +462,8 @@ fun VehicleRemoveSection(
         onRemove = { vehicleVm.removeVehicle(it.id) },
         itemText = { it.vehicleName + " - (${it.vehiclePlate}) " },
         addEditContent = { vehicle, onComplete ->
-            VehicleAddSection(snackbarHostState, vehicle, onComplete)
+            VehicleAddSection(vehicle, onComplete)
         },
-        snackbarHostState = snackbarHostState,
         snackbarMessage = { "Veicolo rimosso con successo!" }
     )
 }
@@ -477,133 +472,103 @@ fun VehicleRemoveSection(
 // PRODUCT SECTIONS
 // -------------------------------------------------------------------------------------------------
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProductAddSection(
-    snackbarHostState: SnackbarHostState,
     productToEdit: ProductEntity? = null,
-    onEditComplete: () -> Unit = {},
+    onEditComplete: (String) -> Unit,
 ) {
     val productVm = viewModel<ProductVm>()
     val titleState = remember { mutableStateOf(productToEdit?.title ?: "") }
     val contentState = remember { mutableStateOf(productToEdit?.content ?: "") }
     val countState = remember { mutableStateOf(productToEdit?.count?.toString() ?: "") }
     var utility by remember { mutableStateOf(productToEdit?.utility) }
-    val coroutineScope = rememberCoroutineScope()
 
-
-    // The logic for the dropdown menu is unfortunately more complex and can't be generalized with TextField
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(16.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(16.dp)
-    ) {
-        Text(
-            if (productToEdit == null) "Inserisci un nuovo Prodotto" else "Modifica Prodotto",
-            style = MaterialTheme.typography.titleLarge
-        )
-        OutlinedTextField(
-            value = titleState.value,
-            onValueChange = { titleState.value = it },
-            label = { Text("Titolo Prodotto") },
-            modifier = Modifier
-                .widthIn(max = 400.dp)
-                .fillMaxWidth()
-        )
-        OutlinedTextField(
-            value = contentState.value,
-            onValueChange = { contentState.value = it },
-            label = { Text("Descrizione") },
-            modifier = Modifier
-                .widthIn(max = 400.dp)
-                .fillMaxWidth()
-        )
-
-
-        OutlinedTextField(
-            value = countState.value,
-            onValueChange = {
-                countState.value = it
-            },
-            label = { Text("Quantità") },
-            modifier = Modifier
-                .widthIn(max = 400.dp)
-                .fillMaxWidth()
-        )
-
-        GenericExposedDropdownMenu(
-            items = Utility.values().toList(),
-            selectedItem = utility,
-            onItemSelected = { utility = it },
-            itemText = { it.displayName },
-            label = "Seleziona Settore",
-        )
-
-
-        Button(
-            onClick = {
-                if (titleState.value.isNotBlank() && countState.value.isNotBlank() && utility != null) {
-                    if (productToEdit == null) {
-                        productVm.insertProduct(
-                            ProductEntity(
-                                title = titleState.value,
-                                content = contentState.value,
-                                count = countState.value.toIntOrNull() ?: 0,
-                                utility = utility ?: Utility.ALTRI
-                            )
-                        )
-                    } else {
-                        val productEntity = ProductEntity(
-                            id = productToEdit.id,
+    BaseAddTab(
+        title = if (productToEdit == null) "Inserisci un nuovo Prodotto" else "Modifica Prodotto",
+        fields = listOf(
+            Field("Titolo Prodotto", titleState, isRequired = true),
+            Field("Descrizione", contentState),
+            Field("Quantità", countState, isRequired = true)
+        ),
+        saveAction = {
+            if (titleState.value.isNotBlank() && countState.value.isNotBlank() && utility != null) {
+                if (productToEdit == null) {
+                    productVm.insertProduct(
+                        ProductEntity(
                             title = titleState.value,
                             content = contentState.value,
                             count = countState.value.toIntOrNull() ?: 0,
                             utility = utility ?: Utility.ALTRI
                         )
-                        productVm.updateProduct(productEntity)
-                    }
-                    titleState.value = ""
-                    contentState.value = ""
-                    countState.value = ""
-                    utility = null
-                    coroutineScope.launch {
-                        snackbarHostState.showSnackbar(if (productToEdit == null) "Prodotto aggiunto con successo!" else "Prodotto modificato con successo!")
-                        onEditComplete()
-                    }
-                    //onEditComplete()
+                    )
+                } else {
+                    val productEntity = ProductEntity(
+                        id = productToEdit.id,
+                        title = titleState.value,
+                        content = contentState.value,
+                        count = countState.value.toIntOrNull() ?: 0,
+                        utility = utility ?: Utility.ALTRI
+                    )
+                    productVm.updateProduct(productEntity)
                 }
-            },
-            enabled = titleState.value.isNotBlank() && countState.value.toIntOrNull() != null && utility != null,
-        ) {
-            Text(if (productToEdit == null) "Aggiungi Prodotto" else "Salva Modifiche")
+                titleState.value = ""
+                contentState.value = ""
+                countState.value = ""
+                utility = null
+            }
+        },
+        saveButtonText = if (productToEdit == null) "Aggiungi Prodotto" else "Salva Modifiche",
+        onEditComplete = onEditComplete,
+        snackbarMessage = if (productToEdit == null) "Prodotto aggiunto con successo!" else "Prodotto modificato con successo!",
+        editContent = {
+            OutlinedTextField(
+                value = titleState.value,
+                onValueChange = { titleState.value = it },
+                label = { Text("Titolo Prodotto") },
+                modifier = Modifier.fillMaxWidth(0.5f)
+            )
+            OutlinedTextField(
+                value = contentState.value,
+                onValueChange = { contentState.value = it },
+                label = { Text("Descrizione") },
+                modifier = Modifier.fillMaxWidth(0.5f)
+            )
+            OutlinedTextField(
+                value = countState.value,
+                onValueChange = { countState.value = it },
+                label = { Text("Quantità") },
+                modifier = Modifier.fillMaxWidth(0.5f)
+            )
+            GenericExposedDropdownMenu(
+                items = Utility.values().toList(),
+                selectedItem = utility,
+                onItemSelected = { utility = it },
+                itemText = { it.displayName },
+                label = "Seleziona Settore",
+            )
         }
-    }
+    )
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProductRemoveSection(
-    snackbarHostState: SnackbarHostState,
     selectedProductForEdit: ProductEntity?,
     onProductEdit: (ProductEntity?) -> Unit,
-    onEditComplete: () -> Unit,
+    onEditComplete: (String) -> Unit,
 ) {
     val productVm = viewModel<ProductVm>()
 
     BaseRemoveTab(
-        title = "Rimuovi o Modifica un Prodotto",
+        title = "Seleziona un Prodotto",
         listFlow = productVm.displayProducts,
         selectedItemForEdit = selectedProductForEdit,
         onEdit = onProductEdit,
         onEditComplete = onEditComplete,
         onRemove = { productVm.removeProduct(it.id) },
-        itemText = { "${it.title} \n ${it.content}" },
+        itemText = { "${it.title} (${it.content})" },
         addEditContent = { product, onComplete ->
-            ProductAddSection(snackbarHostState, product, onComplete)
+            ProductAddSection(product, onComplete)
         },
-        snackbarHostState = snackbarHostState,
         snackbarMessage = { "Prodotto rimosso con successo!" }
     )
 }
