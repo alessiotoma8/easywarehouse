@@ -27,6 +27,7 @@ import kotlinx.datetime.DateTimePeriod
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 import kotlin.time.Clock
+import kotlin.time.Duration.Companion.hours
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.ExperimentalTime
 
@@ -41,20 +42,25 @@ fun App() {
     val reportVm = viewModel<ReportVm>()
 
     @Composable
-    fun MyMonthlyTaskScreen() {
+    fun MyMonthlyTaskScreen(reportVm: ReportVm) {
         LaunchedEffect(key1 = Unit) {
-            val now = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())
+            while (true) {
+                val now = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())
 
-            // Controlla che sia il primo giorno del mese
-            val isFirstDayOfMonth = now.dayOfMonth == 1
+                // Controlla che sia il primo giorno del mese
+                val isFirstDayOfMonth = now.dayOfMonth == 1
 
-            // Controlla che l'ora sia 00:00:01
-            val isMidnight = now.hour == 0 && now.minute == 0 && now.second == 1
+                // Controlla che l'ora sia 00
+                val isMidnight = now.hour == 0
 
-            if (isFirstDayOfMonth && isMidnight) {
-                reportVm.filterByDatePeriod(DateTimePeriod(months = 1))
-                reportVm.exportReport()
-                reportVm.filterByDatePeriod(null)
+                if (isFirstDayOfMonth && isMidnight) {
+                    reportVm.filterByDatePeriod(DateTimePeriod(months = 1))
+                    reportVm.exportReport()
+                    reportVm.filterByDatePeriod(null)
+
+                    delay(1.hours)
+                }
+                delay(10.minutes)
             }
         }
     }
