@@ -1,6 +1,5 @@
 package easy.warehouse.ui.screen
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -14,7 +13,6 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import easy.warehouse.destination.VehicleDestinationEntity
@@ -219,6 +217,7 @@ fun BaseAddTab(
     saveButtonText: String,
     onEditComplete: (String) -> Unit,
     snackbarMessage: String,
+    additioncondition: Boolean = true,
     editContent: @Composable () -> Unit = {
         fields.forEach { field ->
             OutlinedTextField(
@@ -238,6 +237,7 @@ fun BaseAddTab(
     ) {
         Text(title, style = MaterialTheme.typography.titleLarge)
         editContent()
+        Spacer(Modifier)
         Button(
             onClick = {
                 val allFieldsFilled = fields.all { !it.isRequired || it.state.value.isNotBlank() }
@@ -246,7 +246,7 @@ fun BaseAddTab(
                     onEditComplete(snackbarMessage)
                 }
             },
-            enabled = fields.all { !it.isRequired || it.state.value.isNotBlank() }
+            enabled = fields.all { !it.isRequired || it.state.value.isNotBlank() } && additioncondition
         ) {
             Text(saveButtonText)
         }
@@ -261,13 +261,10 @@ fun <T> BaseRemoveTab(
     selectedItemForEdit: T?,
     onEdit: (T?) -> Unit,
     onEditComplete: (String) -> Unit,
-    onRemove: (T) -> Unit,
-    itemText: (T) -> String,
     addEditContent: @Composable (T?, (String) -> Unit) -> Unit,
-    snackbarMessage: (T) -> String,
+    listContent: @Composable (List<T>, (T) -> Unit, (String) -> Unit) -> Unit,
 ) {
     val items by listFlow.collectAsState(initial = emptyList())
-    var selectedItem by remember { mutableStateOf<T?>(null) }
 
     if (selectedItemForEdit != null) {
         Column(
@@ -275,7 +272,6 @@ fun <T> BaseRemoveTab(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             addEditContent(selectedItemForEdit, onEditComplete)
-            Spacer(Modifier.weight(0.3f))
             Spacer(modifier = Modifier.height(16.dp))
             Button(
                 colors = ButtonDefaults.buttonColors(
@@ -294,50 +290,7 @@ fun <T> BaseRemoveTab(
             verticalArrangement = Arrangement.spacedBy(32.dp)
         ) {
             Text(title, style = MaterialTheme.typography.titleLarge)
-            GenericExposedDropdownMenu(
-                items = items,
-                selectedItem = selectedItem,
-                onItemSelected = { selectedItem = it },
-                itemText = { itemText(it) },
-                label = "Seleziona",
-            )
-
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(16.dp),
-            ) {
-                Button(
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.error,
-                        contentColor = MaterialTheme.colorScheme.onError
-                    ),
-                    onClick = {
-                        selectedItem?.let { item ->
-                            onRemove(item)
-                            selectedItem = null
-                            onEditComplete(snackbarMessage(item))
-                        }
-                    },
-                    enabled = selectedItem != null,
-                ) {
-                    Icon(imageVector = Icons.Default.Delete, contentDescription = "Rimuovi")
-                    Spacer(Modifier.width(8.dp))
-                    Text("Rimuovi")
-                }
-                Button(
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.tertiary,
-                        contentColor = MaterialTheme.colorScheme.onTertiary
-                    ),
-                    onClick = {
-                        onEdit(selectedItem)
-                    },
-                    enabled = selectedItem != null,
-                ) {
-                    Icon(imageVector = Icons.Default.Edit, contentDescription = "Modifica")
-                    Spacer(Modifier.width(8.dp))
-                    Text("Modifica")
-                }
-            }
+            listContent(items, onEdit, onEditComplete)
         }
     }
 }
@@ -396,13 +349,66 @@ fun UserRemoveSection(
         selectedItemForEdit = selectedEmployeeForEdit,
         onEdit = onEmployeeEdit,
         onEditComplete = onEditComplete,
-        onRemove = { employeeVm.removeEmployee(it.id) },
-        itemText = { "${it.name} ${it.surname}" },
         addEditContent = { employee, onComplete ->
             UserAddSection(employee, onComplete)
         },
-        snackbarMessage = { "Utente rimosso con successo!" }
+        listContent = { items, onEdit, onComplete ->
+            UserCardList(
+                users = items,
+                onEdit = onEdit,
+                onDelete = {
+                    employeeVm.removeEmployee(it.id)
+                    onComplete("Utente rimosso con successo!")
+                }
+            )
+        }
     )
+}
+
+@Composable
+fun UserCardList(
+    users: List<EmployeeEntity>,
+    onEdit: (EmployeeEntity) -> Unit,
+    onDelete: (EmployeeEntity) -> Unit,
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .verticalScroll(rememberScrollState()),
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        users.forEach { user ->
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth(),
+                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = "${user.name} ${user.surname}",
+                            style = MaterialTheme.typography.titleMedium
+                        )
+                    }
+                    Spacer(Modifier.width(16.dp))
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        IconButton(onClick = { onEdit(user) }) {
+                            Icon(Icons.Default.Edit, contentDescription = "Modifica")
+                        }
+                        IconButton(onClick = { onDelete(user) }) {
+                            Icon(Icons.Default.Delete, contentDescription = "Elimina", tint = MaterialTheme.colorScheme.error)
+                        }
+                    }
+                }
+            }
+        }
+    }
 }
 
 // -------------------------------------------------------------------------------------------------
@@ -459,13 +465,70 @@ fun VehicleRemoveSection(
         selectedItemForEdit = selectedVehicleForEdit,
         onEdit = onVehicleEdit,
         onEditComplete = onEditComplete,
-        onRemove = { vehicleVm.removeVehicle(it.id) },
-        itemText = { it.vehicleName + " - (${it.vehiclePlate}) " },
         addEditContent = { vehicle, onComplete ->
             VehicleAddSection(vehicle, onComplete)
         },
-        snackbarMessage = { "Veicolo rimosso con successo!" }
+        listContent = { items, onEdit, onComplete ->
+            VehicleCardList(
+                vehicles = items,
+                onEdit = onEdit,
+                onDelete = {
+                    vehicleVm.removeVehicle(it.id)
+                    onComplete("Veicolo rimosso con successo!")
+                }
+            )
+        }
     )
+}
+
+@Composable
+fun VehicleCardList(
+    vehicles: List<VehicleDestinationEntity>,
+    onEdit: (VehicleDestinationEntity) -> Unit,
+    onDelete: (VehicleDestinationEntity) -> Unit,
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .verticalScroll(rememberScrollState()),
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        vehicles.forEach { vehicle ->
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = vehicle.vehicleName,
+                            style = MaterialTheme.typography.titleMedium
+                        )
+                        Text(
+                            text = "Targa: ${vehicle.vehiclePlate}",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                    Spacer(Modifier.width(16.dp))
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        IconButton(onClick = { onEdit(vehicle) }) {
+                            Icon(Icons.Default.Edit, contentDescription = "Modifica")
+                        }
+                        IconButton(onClick = { onDelete(vehicle) }) {
+                            Icon(Icons.Default.Delete, contentDescription = "Elimina", tint = MaterialTheme.colorScheme.error)
+                        }
+                    }
+                }
+            }
+        }
+    }
 }
 
 // -------------------------------------------------------------------------------------------------
@@ -490,6 +553,7 @@ fun ProductAddSection(
             Field("Descrizione", contentState),
             Field("Quantità", countState, isRequired = true)
         ),
+        additioncondition = utility != null,
         saveAction = {
             if (titleState.value.isNotBlank() && countState.value.isNotBlank() && utility != null) {
                 if (productToEdit == null) {
@@ -545,6 +609,7 @@ fun ProductAddSection(
                 onItemSelected = { utility = it },
                 itemText = { it.displayName },
                 label = "Seleziona Settore",
+                modifier = Modifier.fillMaxWidth(0.5f)
             )
         }
     )
@@ -564,11 +629,80 @@ fun ProductRemoveSection(
         selectedItemForEdit = selectedProductForEdit,
         onEdit = onProductEdit,
         onEditComplete = onEditComplete,
-        onRemove = { productVm.removeProduct(it.id) },
-        itemText = { "${it.title} (${it.content})" },
         addEditContent = { product, onComplete ->
             ProductAddSection(product, onComplete)
         },
-        snackbarMessage = { "Prodotto rimosso con successo!" }
+        listContent = { items, onEdit, onComplete ->
+            ProductCardList(
+                products = items,
+                onEdit = onEdit,
+                onDelete = {
+                    productVm.removeProduct(it.id)
+                    onComplete("Prodotto rimosso con successo!")
+                }
+            )
+        }
     )
+}
+
+@Composable
+fun ProductCardList(
+    products: List<ProductEntity>,
+    onEdit: (ProductEntity) -> Unit,
+    onDelete: (ProductEntity) -> Unit,
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .verticalScroll(rememberScrollState()),
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        products.forEach { product ->
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = product.title,
+                            style = MaterialTheme.typography.titleMedium
+                        )
+                        if (product.content?.isNotBlank() ?: false) {
+                            Text(
+                                text = product.content,
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                        Text(
+                            text = "Quantità: ${product.count}",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        Text(
+                            text = "Settore: ${product.utility.displayName}",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                    Spacer(Modifier.width(16.dp))
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        IconButton(onClick = { onEdit(product) }) {
+                            Icon(Icons.Default.Edit, contentDescription = "Modifica")
+                        }
+                        IconButton(onClick = { onDelete(product) }) {
+                            Icon(Icons.Default.Delete, contentDescription = "Elimina", tint = MaterialTheme.colorScheme.error)
+                        }
+                    }
+                }
+            }
+        }
+    }
 }

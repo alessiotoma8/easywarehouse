@@ -302,6 +302,7 @@ fun <T> GenericExposedDropdownMenu(
     itemText: (T) -> String,
     label: String = "Seleziona Elemento",
     isError: Boolean = false,
+    modifier : Modifier = Modifier,
 ) {
     var expanded by remember { mutableStateOf(false) }
     var searchQuery by remember { mutableStateOf("") }
@@ -311,7 +312,7 @@ fun <T> GenericExposedDropdownMenu(
     }
     val searchFocusRequester = remember { FocusRequester() }
 
-    Row(verticalAlignment = Alignment.CenterVertically) {
+    Row(verticalAlignment = Alignment.CenterVertically, modifier = modifier) {
         ExposedDropdownMenuBox(
             expanded = expanded,
             onExpandedChange = { expanded = !expanded },
