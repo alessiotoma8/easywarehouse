@@ -2,12 +2,14 @@ package easy.warehouse.report
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import easy.warehouse.data.exportDatabaseToCsv
 import easy.warehouse.db.getRoomDatabase
 import easy.warehouse.product.Utility
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -178,10 +180,16 @@ class ReportVm : ViewModel() {
         _endDate.emit(endDate)
     }
 
-        fun clearDateRange(){
+    fun clearDateRange() {
         viewModelScope.launch {
             _startDate.emit(null)
             _endDate.emit(null)
         }
+    }
+
+    fun exportReport() = viewModelScope.launch{
+        _searchQuery.emit(null)
+        val filteredReports = reports.first()
+        exportDatabaseToCsv(filteredReports)
     }
 }
