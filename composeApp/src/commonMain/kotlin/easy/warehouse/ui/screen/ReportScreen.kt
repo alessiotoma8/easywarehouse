@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Divider
@@ -30,11 +31,13 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import easy.warehouse.data.openDbReportsFolder
 import easy.warehouse.report.InventoryItem
 import easy.warehouse.report.ReportEntity
 import easy.warehouse.report.ReportVm
@@ -117,24 +120,36 @@ private fun ReportsContent(
             }
         }
 
-        val canExport by reportVm.canExport.collectAsStateWithLifecycle()
-        if (canExport) {
-            Card(
-                modifier = Modifier.width(350.dp).align(Alignment.BottomCenter),
-                elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.surfaceContainerHigh
-                )
+        Card(
+            modifier = Modifier.width(450.dp).align(Alignment.BottomEnd).padding(16.dp),
+            elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
+            colors = CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.surfaceContainerHigh
+            )
+        ) {
+            Column(
+                modifier = Modifier.padding(20.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                Column(
-                    modifier = Modifier.padding(20.dp)
-                ) {
+                Text("Report Export", style = MaterialTheme.typography.titleLarge)
+                Row {
                     Button(
                         onClick = {
                             reportVm.exportReport()
                         }
                     ) {
-                        Text("Esporta Report")
+                        Text("Esporta ${reports.size} Report")
+                    }
+
+                    Button(
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.tertiary
+                        ),
+                        onClick = {
+                            openDbReportsFolder()
+                        }
+                    ) {
+                        Text("Apri cartella export")
                     }
                 }
             }
@@ -264,7 +279,7 @@ private fun ReportsHeader() {
     }
 }
 
-@OptIn(ExperimentalTime::class)
+
 @Composable
 private fun ReportRow(report: ReportEntity, index: Int) {
     val backgroundColor = if (index % 2 == 0) {
@@ -295,29 +310,43 @@ private fun ReportRow(report: ReportEntity, index: Int) {
 
         val displayCount = if (report.productCountChange > 0)
             "+${report.productCountChange}" else report.productCountChange.toString()
-        Cell(displayCount, weight = 1f, alignRight = true)
+
+        // Determine the color based on the sign of productCountChange
+        val cellColor = if (report.productCountChange > 0) {
+            MaterialTheme.colorScheme.primary
+        } else {
+            MaterialTheme.colorScheme.error
+        }
+
+        // Pass the color to the Cell Composable
+        Cell(
+            text = displayCount,
+            weight = 1f,
+            alignRight = true,
+            color = cellColor
+        )
     }
     Divider(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f))
 }
 
 @Composable
-private fun RowScope.HeaderCell(text: String, weight: Float, alignRight: Boolean = false) {
+private fun RowScope.HeaderCell(text: String, weight: Float, alignRight: Boolean = false, color: Color = MaterialTheme.colorScheme.onBackground) {
     Text(
         text = text,
         modifier = Modifier.weight(weight),
         fontWeight = FontWeight.Bold,
         textAlign = if (alignRight) TextAlign.End else TextAlign.Start,
-        style = MaterialTheme.typography.labelSmall
+        style = MaterialTheme.typography.labelSmall.copy(color = color)
     )
 }
 
 @Composable
-private fun RowScope.Cell(text: String, weight: Float, alignRight: Boolean = false) {
+private fun RowScope.Cell(text: String, weight: Float, alignRight: Boolean = false, color: Color = MaterialTheme.colorScheme.onBackground) {
     Text(
         text = text,
         modifier = Modifier.weight(weight),
         textAlign = if (alignRight) TextAlign.End else TextAlign.Start,
-        style = MaterialTheme.typography.bodySmall
+        style = MaterialTheme.typography.bodySmall.copy(color = color)
     )
 }
 

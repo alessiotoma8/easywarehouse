@@ -62,3 +62,4 @@ suspend fun exportDatabaseToCsv(reports: List<ReportEntity>) {
 
 // commonMain
 expect fun saveToUserHomeFolder(fileName: String, content: ByteArray)
+expect fun openDbReportsFolder()

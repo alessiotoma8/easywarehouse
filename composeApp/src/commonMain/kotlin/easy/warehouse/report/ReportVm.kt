@@ -55,14 +55,6 @@ class ReportVm : ViewModel() {
     val startDate = _startDate.asStateFlow()
     val endDate = _endDate.asStateFlow()
 
-    val canExport = combine(startDate, endDate, selectedDatePeriod) { start, end, period ->
-        start != null && end != null || period != null
-    }.stateIn(
-        viewModelScope,
-        SharingStarted.WhileSubscribed(5000),
-        false
-    )
-
     private val dbReports = reportRepo.getAllReports()
     val reports = combine(
         dbReports,
@@ -192,9 +184,11 @@ class ReportVm : ViewModel() {
         }
     }
 
-    fun exportReport() = viewModelScope.launch {
-        _searchQuery.emit(null)
-        val filteredReports = reports.first()
-        exportDatabaseToCsv(filteredReports)
+
+    fun exportReport() {
+        viewModelScope.launch {
+            val filteredReports = reports.first()
+            exportDatabaseToCsv(filteredReports)
+        }
     }
 }
