@@ -199,24 +199,9 @@ fun JvmDatePicker(
                             selected = selectedDate,
                             onPick = {
                                 onDateSelected(it)
+                                open = false
                             }
                         )
-
-                        Spacer(Modifier.height(8.dp))
-
-                        // Button to clear selection
-                        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
-                            TextButton(onClick = { open = false }) {
-                                Text("Annulla")
-                            }
-                            Spacer(Modifier.width(8.dp))
-                            TextButton(onClick = {
-                                open = false
-                                // Conferma la data selezionata (già aggiornata onPick)
-                            }) {
-                                Text("Conferma")
-                            }
-                        }
                     }
                 }
             }
