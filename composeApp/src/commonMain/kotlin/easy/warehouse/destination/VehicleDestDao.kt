@@ -12,9 +12,9 @@ interface VehicleDestDao {
     @Query("SELECT * FROM VehicleDestinationEntity ORDER BY vehicleName DESC")
     suspend fun selectAll(): List<VehicleDestinationEntity>
 
-    @Query("DELETE FROM VehicleDestinationEntity WHERE vehiclePlate = :vehiclePlate")
-    suspend fun removeById(vehiclePlate: String)
+    @Query("DELETE FROM VehicleDestinationEntity WHERE id = :id")
+    suspend fun removeById(id: Long)
 
-    @Query("SELECT * FROM VehicleDestinationEntity WHERE vehiclePlate = :vehiclePlate")
-    suspend fun getById(vehiclePlate: String): VehicleDestinationEntity?
+    @Query("SELECT * FROM VehicleDestinationEntity WHERE id = :id")
+    suspend fun getById(id: Long): VehicleDestinationEntity?
 }

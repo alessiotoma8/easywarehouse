@@ -111,11 +111,11 @@ class ReportVm : ViewModel() {
 
 
     @OptIn(ExperimentalTime::class)
-    fun createReport(productId: Long, employeeId: Long, vehiclePlate: String?, deltaProduct: Int) =
+    fun createReport(productId: Long, employeeId: Long, vehicleId: Long?, deltaProduct: Int) =
         viewModelScope.launch {
             val product = productRepo.getById(productId)
             val employee = employeeRepo.getById(employeeId)
-            val vehicle = vehiclePlate?.let { vehicleRepo.getById(it) }
+            val vehicle = vehicleId?.let { vehicleRepo.getById(it) }
 
             val date = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())
             val report = ReportEntity(

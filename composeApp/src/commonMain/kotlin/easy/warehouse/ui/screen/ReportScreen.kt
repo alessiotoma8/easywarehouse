@@ -130,12 +130,12 @@ fun ReportsScreen(onBackClick: () -> Unit) {
                         Button(
                             onClick = {
                                 reportVm.exportReport()
+                                coroutineScope.launch {
+                                    snackbarHostState.showSnackbar("Esportazione di ${reports.size} report eseguita!")
+                                }
                             }
                         ) {
                             Text("Esporta ${reports.size} Report")
-                            coroutineScope.launch {
-                                snackbarHostState.showSnackbar("Esportazione di ${reports.size} report eseguita!")
-                            }
                         }
                     }
                 }

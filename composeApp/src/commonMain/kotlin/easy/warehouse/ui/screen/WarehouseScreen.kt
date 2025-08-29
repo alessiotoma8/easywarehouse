@@ -151,7 +151,7 @@ fun WarehouseScreen(onLoginClick: () -> Unit) {
                                 reportVm.createReport(
                                     productId = change.productId,
                                     employeeId = employee.id,
-                                    vehiclePlate = selectedVehicle?.vehiclePlate,
+                                    vehicleId = selectedVehicle?.id,
                                     deltaProduct = change.delta
                                 )
                             }

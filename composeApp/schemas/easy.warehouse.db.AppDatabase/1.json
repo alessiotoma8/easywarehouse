@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 1,
-    "identityHash": "6accd2086081b63206801658f5ed3ee9",
+    "identityHash": "88e67a10aa1a17a605650584f8c3959a",
     "entities": [
       {
         "tableName": "ProductEntity",
@@ -77,8 +77,14 @@
       },
       {
         "tableName": "VehicleDestinationEntity",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`vehiclePlate` TEXT NOT NULL, `vehicleName` TEXT NOT NULL, PRIMARY KEY(`vehiclePlate`))",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `vehiclePlate` TEXT NOT NULL, `vehicleName` TEXT NOT NULL)",
         "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
           {
             "fieldPath": "vehiclePlate",
             "columnName": "vehiclePlate",
@@ -93,9 +99,9 @@
           }
         ],
         "primaryKey": {
-          "autoGenerate": false,
+          "autoGenerate": true,
           "columnNames": [
-            "vehiclePlate"
+            "id"
           ]
         }
       },
@@ -189,7 +195,7 @@
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '6accd2086081b63206801658f5ed3ee9')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '88e67a10aa1a17a605650584f8c3959a')"
     ]
   }
 }

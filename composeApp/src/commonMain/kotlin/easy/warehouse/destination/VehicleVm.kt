@@ -28,13 +28,13 @@ class VehicleVm : ViewModel() {
         _vehicles.value = dbRepo.selectAll()
     }
 
-    fun removeVehicle(plate: String) = viewModelScope.launch {
-        dbRepo.removeById(plate)
+    fun removeVehicle(id: Long) = viewModelScope.launch {
+        dbRepo.removeById(id)
         _vehicles.value = dbRepo.selectAll()
     }
 
-    fun updateVehicle(name: String, plate: String) = viewModelScope.launch {
-        val newVehicle = VehicleDestinationEntity(vehicleName = name, vehiclePlate = plate)
+    fun updateVehicle(name: String, plate: String, id:Long) = viewModelScope.launch {
+        val newVehicle = VehicleDestinationEntity(vehicleName = name, vehiclePlate = plate, id = id)
         dbRepo.insert(newVehicle)
         _vehicles.value = dbRepo.selectAll()
 

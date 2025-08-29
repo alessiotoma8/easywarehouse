@@ -432,8 +432,9 @@ fun VehicleAddSection(
                 vehicleVm.addVehicle(plate = vehiclePlateState.value, name = vehicleNameState.value)
             } else {
                 vehicleVm.updateVehicle(
-                    plate = vehicleToEdit.vehiclePlate,
-                    name = vehicleNameState.value
+                    plate = vehiclePlateState.value,
+                    name = vehicleNameState.value,
+                    id = vehicleToEdit.id
                 )
             }
             vehiclePlateState.value = ""
@@ -462,8 +463,8 @@ fun VehicleRemoveSection(
         selectedItemForEdit = selectedVehicleForEdit,
         onEdit = onVehicleEdit,
         onEditComplete = onEditComplete,
-        onRemove = { vehicleVm.removeVehicle(it.vehiclePlate) },
-        itemText = { it.vehicleName },
+        onRemove = { vehicleVm.removeVehicle(it.id) },
+        itemText = { it.vehicleName + " - (${it.vehiclePlate}) " },
         addEditContent = { vehicle, onComplete ->
             VehicleAddSection(snackbarHostState, vehicle, onComplete)
         },
