@@ -50,10 +50,18 @@ class ReportVm : ViewModel() {
     private val _searchQuery = MutableStateFlow<String?>(null)
     val searchQuery = _searchQuery.asStateFlow()
 
-    private val _startDate = MutableStateFlow<kotlin.time.Instant?>(null)
-    private val _endDate = MutableStateFlow<kotlin.time.Instant?>(null)
+    private val _startDate = MutableStateFlow<Instant?>(null)
+    private val _endDate = MutableStateFlow<Instant?>(null)
     val startDate = _startDate.asStateFlow()
     val endDate = _endDate.asStateFlow()
+
+    val canExport = combine(startDate, endDate, selectedDatePeriod) { start, end, period ->
+        start != null && end != null || period != null
+    }.stateIn(
+        viewModelScope,
+        SharingStarted.WhileSubscribed(5000),
+        false
+    )
 
     private val dbReports = reportRepo.getAllReports()
     val reports = combine(

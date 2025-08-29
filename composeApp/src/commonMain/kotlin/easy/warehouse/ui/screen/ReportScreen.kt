@@ -1,16 +1,19 @@
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.material3.DateRangePicker
+import androidx.compose.material3.Button
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Divider
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
@@ -19,13 +22,13 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
-import androidx.compose.material3.rememberDateRangePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -45,7 +48,6 @@ import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.atStartOfDayIn
-import kotlinx.datetime.atTime
 import kotlinx.datetime.plus
 import kotlin.time.Duration.Companion.nanoseconds
 import kotlin.time.ExperimentalTime
@@ -98,15 +100,43 @@ private fun ReportsContent(
     reports: List<ReportEntity>,
 ) {
     val filteredReports = reports
-    Column(modifier = Modifier.fillMaxSize(), verticalArrangement = Arrangement.spacedBy(16.dp)) {
-        ReportSearch(reportVm)
-        Text(text = "Risultati trovati: (${filteredReports.size})")
-        LazyColumn {
-            stickyHeader {
-                ReportsHeader()
+    Box {
+        Column(
+            modifier = Modifier.fillMaxSize(),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            ReportSearch(reportVm)
+            Text(text = "Risultati trovati: (${filteredReports.size})")
+            LazyColumn {
+                stickyHeader {
+                    ReportsHeader()
+                }
+                itemsIndexed(filteredReports) { index, item ->
+                    ReportRow(item, index)
+                }
             }
-            itemsIndexed(filteredReports) { index, item ->
-                ReportRow(item, index)
+        }
+
+        val canExport by reportVm.canExport.collectAsStateWithLifecycle()
+        if (canExport) {
+            Card(
+                modifier = Modifier.width(350.dp).align(Alignment.BottomCenter),
+                elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.surfaceContainerHigh
+                )
+            ) {
+                Column(
+                    modifier = Modifier.padding(20.dp)
+                ) {
+                    Button(
+                        onClick = {
+                            reportVm.exportReport()
+                        }
+                    ) {
+                        Text("Esporta Report")
+                    }
+                }
             }
         }
     }
@@ -125,14 +155,46 @@ fun ReportSearch(reportVm: ReportVm) {
         DateTimePeriod(years = 1) to "Ultimo anno"
     )
 
-    SearchBar(
-        query = searchQuery,
-        onQueryChange = {
-            searchQuery = it
-            reportVm.searchReport(it)
-        },
-        placeholder = "Cerca per nome, prodotto, dipendente ..."
-    )
+    Row(
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        SearchBar(
+            query = searchQuery,
+            onQueryChange = {
+                searchQuery = it
+                reportVm.searchReport(it)
+            },
+            modifier = Modifier.weight(1f),
+            placeholder = "Cerca per nome, prodotto, dipendente ..."
+        )
+
+        var selectedStartDate by remember { mutableStateOf<LocalDate?>(null) }
+        var selectedEndDate by remember { mutableStateOf<LocalDate?>(null) }
+
+        JvmDatePicker(
+            selectedDate = selectedStartDate,
+            onDateSelected = { selectedStartDate = it },
+            label = "Data inizio"
+        )
+
+        JvmDatePicker(
+            selectedDate = selectedEndDate,
+            onDateSelected = { selectedEndDate = it },
+            label = "Data fine"
+        )
+
+        LaunchedEffect(selectedStartDate, selectedEndDate) {
+            if (selectedStartDate != null && selectedEndDate != null) {
+                reportVm.filterByDateRange(
+                    startDate = selectedStartDate!!.atStartOfDayIn(TimeZone.currentSystemDefault()),
+                    endDate = selectedEndDate!!.atEndOfDayIn(TimeZone.currentSystemDefault())
+                )
+            } else {
+                reportVm.clearDateRange()
+            }
+        }
+    }
 
     FlowRow(
         modifier = Modifier.fillMaxWidth().padding(horizontal = 4.dp),
@@ -169,34 +231,6 @@ fun ReportSearch(reportVm: ReportVm) {
                     selectedLabelColor = MaterialTheme.colorScheme.onPrimary
                 )
             )
-        }
-
-        Spacer(modifier = Modifier.weight(1f))
-
-        var selectedStartDate by remember { mutableStateOf<LocalDate?>(null) }
-        var selectedEndDate by remember { mutableStateOf<LocalDate?>(null) }
-
-        JvmDatePicker(
-            selectedDate = selectedStartDate,
-            onDateSelected = { selectedStartDate = it },
-            label = "Data inizio"
-        )
-
-        JvmDatePicker(
-            selectedDate = selectedEndDate,
-            onDateSelected = { selectedEndDate = it },
-            label = "Data fine"
-        )
-
-        LaunchedEffect(selectedStartDate, selectedEndDate) {
-            if (selectedStartDate != null && selectedEndDate != null) {
-                reportVm.filterByDateRange(
-                    startDate = selectedStartDate!!.atStartOfDayIn(TimeZone.currentSystemDefault()),
-                    endDate = selectedEndDate!!.atEndOfDayIn(TimeZone.currentSystemDefault())
-                )
-            } else {
-                reportVm.clearDateRange()
-            }
         }
     }
 }
