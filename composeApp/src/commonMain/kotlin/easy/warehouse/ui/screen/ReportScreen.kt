@@ -114,7 +114,6 @@ fun ReportsScreen(onBackClick: () -> Unit) {
                         Button(
                             colors = ButtonDefaults.buttonColors(
                                 containerColor = MaterialTheme.colorScheme.tertiary,
-                                contentColor = MaterialTheme.colorScheme.onTertiary
                             ),
                             onClick = {
                                 openDbReportsFolder()

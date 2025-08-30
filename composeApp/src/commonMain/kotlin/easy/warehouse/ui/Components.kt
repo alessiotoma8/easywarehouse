@@ -411,6 +411,16 @@ fun SearchBar(
                 contentDescription = "Search Icon"
             )
         },
+        trailingIcon = {
+            if (query.isNotEmpty()) {
+                IconButton(onClick = { onQueryChange("") }) {
+                    Icon(
+                        imageVector = Icons.Default.Clear,
+                        contentDescription = "Clear Search"
+                    )
+                }
+            }
+        },
         shape = RoundedCornerShape(16.dp)
     )
 }
