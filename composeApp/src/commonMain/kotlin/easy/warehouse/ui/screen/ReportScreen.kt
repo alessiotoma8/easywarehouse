@@ -18,12 +18,11 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Divider
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.Tab
-import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -41,7 +40,6 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import easy.warehouse.data.openDbReportsFolder
-import easy.warehouse.report.InventoryItem
 import easy.warehouse.report.ReportEntity
 import easy.warehouse.report.ReportVm
 import easy.warehouse.report.getLocalDateTime
@@ -67,36 +65,21 @@ fun ReportsScreen(onBackClick: () -> Unit) {
     val reportVm = viewModel<ReportVm>()
     val reports by reportVm.reports.collectAsStateWithLifecycle()
 
-    val tabs = listOf("Report")
-    var selectedTabIndex by remember { mutableStateOf(0) }
-
     val snackbarHostState = remember { SnackbarHostState() }
     val coroutineScope = rememberCoroutineScope()
 
     Scaffold(
         topBar = {
-            WAppBar("Gestione Magazzino", onBackClick)
+            WAppBar("Report", onBackClick)
         },
         snackbarHost = { SnackbarHost(snackbarHostState) }
     ) { innerPadding ->
         Box {
             ScreenContent(innerPadding) {
-                TabRow(selectedTabIndex = selectedTabIndex) {
-                    tabs.forEachIndexed { index, title ->
-                        Tab(
-                            selected = selectedTabIndex == index,
-                            onClick = { selectedTabIndex = index },
-                            text = { Text(title) }
-                        )
-                    }
-                }
-                when (selectedTabIndex) {
-                    0 -> ReportsContent(
-                        reportVm = reportVm, reports = reports
-                    )
-                }
+                ReportsContent(
+                    reportVm = reportVm, reports = reports
+                )
             }
-
 
             Card(
                 modifier = Modifier.width(450.dp).align(Alignment.BottomEnd).padding(16.dp),
@@ -151,8 +134,10 @@ private fun ReportsContent(
         modifier = Modifier.fillMaxSize(),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
+        Text("Report", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
         ReportSearch(reportVm)
         Text(text = "Risultati trovati: (${filteredReports.size})")
+        HorizontalDivider()
         LazyColumn {
             stickyHeader {
                 ReportsHeader()
@@ -348,7 +333,7 @@ private fun RowScope.HeaderCell(
         modifier = Modifier.weight(weight),
         fontWeight = FontWeight.Bold,
         textAlign = if (alignRight) TextAlign.End else TextAlign.Start,
-        style = MaterialTheme.typography.labelSmall.copy(color = color)
+        style = MaterialTheme.typography.titleSmall.copy(color = color)
     )
 }
 
@@ -363,7 +348,7 @@ private fun RowScope.Cell(
         text = text,
         modifier = Modifier.weight(weight),
         textAlign = if (alignRight) TextAlign.End else TextAlign.Start,
-        style = MaterialTheme.typography.bodySmall.copy(color = color)
+        style = MaterialTheme.typography.bodyMedium.copy(color = color)
     )
 }
 

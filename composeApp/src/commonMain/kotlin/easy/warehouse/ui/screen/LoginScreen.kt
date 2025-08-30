@@ -19,14 +19,13 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.focus.FocusDirection
 import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.FocusRequester.Companion.FocusRequesterFactory.component1
+import androidx.compose.ui.focus.FocusRequester.Companion.FocusRequesterFactory.component2
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.isCtrlPressed
-import androidx.compose.ui.input.key.isShiftPressed
 import androidx.compose.ui.input.key.key
-import androidx.compose.ui.input.key.onKeyEvent
 import androidx.compose.ui.input.key.onPreviewKeyEvent
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -54,7 +53,7 @@ fun LoginScreen(authAction: (String, String) -> Unit, onBack: () -> Unit) {
                     .fillMaxSize()
                     .onPreviewKeyEvent {
                         if (it.key == Key.Tab && it.isCtrlPressed.not()) {
-                                usernameFocusRequester.requestFocus()
+                            passwordFocusRequester.requestFocus()
                             true
                         } else if (it.key == Key.Enter) {
                             authAction(username, password)

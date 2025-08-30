@@ -257,7 +257,7 @@ fun UserSelection(
     onEmployeeSelected: (EmployeeEntity?) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    Column(modifier = modifier) {
+    Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Text("Utente", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
         GenericExposedDropdownMenu(
             items = employees,
@@ -277,7 +277,7 @@ fun DestinationSelection(
     onVehicleSelected: (VehicleDestinationEntity?) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    Column(modifier = modifier) {
+    Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Text(
             "Destinazione",
             style = MaterialTheme.typography.titleLarge,

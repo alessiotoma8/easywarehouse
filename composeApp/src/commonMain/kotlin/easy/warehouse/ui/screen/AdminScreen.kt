@@ -224,7 +224,7 @@ fun BaseAddTab(
                 value = field.state.value,
                 onValueChange = { field.state.value = it },
                 label = { Text(field.label) },
-                modifier = Modifier.widthIn(max = 600.dp),
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
                 enabled = field.isEnabled
             )
         }
@@ -589,19 +589,19 @@ fun ProductAddSection(
                 value = titleState.value,
                 onValueChange = { titleState.value = it },
                 label = { Text("Titolo Prodotto") },
-                modifier = Modifier.widthIn(max = 600.dp)
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp)
             )
             OutlinedTextField(
                 value = contentState.value,
                 onValueChange = { contentState.value = it },
                 label = { Text("Descrizione") },
-                modifier = Modifier.widthIn(max = 600.dp)
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp)
             )
             OutlinedTextField(
                 value = countState.value,
                 onValueChange = { countState.value = it },
                 label = { Text("Quantità") },
-                modifier = Modifier.widthIn(max = 600.dp)
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp)
             )
             GenericExposedDropdownMenu(
                 items = Utility.values().toList(),
@@ -609,7 +609,7 @@ fun ProductAddSection(
                 onItemSelected = { utility = it },
                 itemText = { it.displayName },
                 label = "Seleziona Settore",
-                modifier = Modifier.widthIn(max = 600.dp)
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp)
             )
         }
     )
