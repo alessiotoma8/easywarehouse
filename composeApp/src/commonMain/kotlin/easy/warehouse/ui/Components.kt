@@ -1,5 +1,11 @@
 package easy.warehouse.ui
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
+import androidx.compose.animation.slideInVertically
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -173,6 +179,23 @@ fun ProductItem(product: ProductEntity, productVm: ProductVm) {
     }
 }
 
+@Composable
+fun AutoAnimatedVisibility(content:@Composable() () -> Unit) {
+    var visible by remember { mutableStateOf(false) }
+
+    // Quando il composable entra in composition, parte l'animazione
+    LaunchedEffect(Unit) {
+        visible = true
+    }
+
+    AnimatedVisibility(
+        visible = visible,
+        enter = fadeIn() +  slideInVertically(initialOffsetY = { it / 3 }),
+        exit = fadeOut()
+    ) {
+        content()
+    }
+}
 @Composable
 fun ChangesSummary(
     pendingChanges: Map<Long, PendingChange>,

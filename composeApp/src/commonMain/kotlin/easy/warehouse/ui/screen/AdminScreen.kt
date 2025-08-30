@@ -52,6 +52,7 @@ import easy.warehouse.employee.EmployeeVm
 import easy.warehouse.product.ProductEntity
 import easy.warehouse.product.ProductVm
 import easy.warehouse.product.Utility
+import easy.warehouse.ui.AutoAnimatedVisibility
 import easy.warehouse.ui.GenericExposedDropdownMenu
 import easy.warehouse.ui.ScreenContent
 import easy.warehouse.ui.SearchBar
@@ -424,35 +425,37 @@ fun UserCardList(
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         users.forEach { user ->
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth(),
-                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
-            ) {
-                Row(
+            AutoAnimatedVisibility {
+                Card(
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween
+                        .fillMaxWidth(),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
                 ) {
-                    Column(modifier = Modifier.weight(1f)) {
-                        Text(
-                            text = "${user.name} ${user.surname}",
-                            style = MaterialTheme.typography.titleMedium
-                        )
-                    }
-                    Spacer(Modifier.width(16.dp))
-                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        IconButton(onClick = { onEdit(user) }) {
-                            Icon(Icons.Default.Edit, contentDescription = "Modifica")
-                        }
-                        IconButton(onClick = { onDelete(user) }) {
-                            Icon(
-                                Icons.Default.Delete,
-                                contentDescription = "Elimina",
-                                tint = MaterialTheme.colorScheme.error
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = "${user.name} ${user.surname}",
+                                style = MaterialTheme.typography.titleMedium
                             )
+                        }
+                        Spacer(Modifier.width(16.dp))
+                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            IconButton(onClick = { onEdit(user) }) {
+                                Icon(Icons.Default.Edit, contentDescription = "Modifica")
+                            }
+                            IconButton(onClick = { onDelete(user) }) {
+                                Icon(
+                                    Icons.Default.Delete,
+                                    contentDescription = "Elimina",
+                                    tint = MaterialTheme.colorScheme.error
+                                )
+                            }
                         }
                     }
                 }
@@ -550,39 +553,41 @@ fun VehicleCardList(
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         vehicles.forEach { vehicle ->
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
-            ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween
+            AutoAnimatedVisibility {
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
                 ) {
-                    Column(modifier = Modifier.weight(1f)) {
-                        Text(
-                            text = vehicle.vehicleName,
-                            style = MaterialTheme.typography.titleMedium
-                        )
-                        Text(
-                            text = "Targa: ${vehicle.vehiclePlate}",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                    Spacer(Modifier.width(16.dp))
-                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        IconButton(onClick = { onEdit(vehicle) }) {
-                            Icon(Icons.Default.Edit, contentDescription = "Modifica")
-                        }
-                        IconButton(onClick = { onDelete(vehicle) }) {
-                            Icon(
-                                Icons.Default.Delete,
-                                contentDescription = "Elimina",
-                                tint = MaterialTheme.colorScheme.error
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = vehicle.vehicleName,
+                                style = MaterialTheme.typography.titleMedium
                             )
+                            Text(
+                                text = "Targa: ${vehicle.vehiclePlate}",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                        Spacer(Modifier.width(16.dp))
+                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            IconButton(onClick = { onEdit(vehicle) }) {
+                                Icon(Icons.Default.Edit, contentDescription = "Modifica")
+                            }
+                            IconButton(onClick = { onDelete(vehicle) }) {
+                                Icon(
+                                    Icons.Default.Delete,
+                                    contentDescription = "Elimina",
+                                    tint = MaterialTheme.colorScheme.error
+                                )
+                            }
                         }
                     }
                 }
@@ -724,51 +729,53 @@ fun ProductCardList(
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         products.forEach { product ->
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
-            ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween
+            AutoAnimatedVisibility {
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
                 ) {
-                    Column(modifier = Modifier.weight(1f)) {
-                        Text(
-                            text = product.title,
-                            style = MaterialTheme.typography.titleMedium
-                        )
-                        if (product.content?.isNotBlank() ?: false) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Column(modifier = Modifier.weight(1f)) {
                             Text(
-                                text = product.content,
+                                text = product.title,
+                                style = MaterialTheme.typography.titleMedium
+                            )
+                            if (product.content?.isNotBlank() ?: false) {
+                                Text(
+                                    text = product.content,
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                            Text(
+                                text = "Quantità: ${product.count}",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                            Text(
+                                text = "Settore: ${product.utility.displayName}",
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
-                        Text(
-                            text = "Quantità: ${product.count}",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                        Text(
-                            text = "Settore: ${product.utility.displayName}",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                    Spacer(Modifier.width(16.dp))
-                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        IconButton(onClick = { onEdit(product) }) {
-                            Icon(Icons.Default.Edit, contentDescription = "Modifica")
-                        }
-                        IconButton(onClick = { onDelete(product) }) {
-                            Icon(
-                                Icons.Default.Delete,
-                                contentDescription = "Elimina",
-                                tint = MaterialTheme.colorScheme.error
-                            )
+                        Spacer(Modifier.width(16.dp))
+                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            IconButton(onClick = { onEdit(product) }) {
+                                Icon(Icons.Default.Edit, contentDescription = "Modifica")
+                            }
+                            IconButton(onClick = { onDelete(product) }) {
+                                Icon(
+                                    Icons.Default.Delete,
+                                    contentDescription = "Elimina",
+                                    tint = MaterialTheme.colorScheme.error
+                                )
+                            }
                         }
                     }
                 }

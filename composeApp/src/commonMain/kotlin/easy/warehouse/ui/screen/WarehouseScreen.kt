@@ -38,6 +38,7 @@ import easy.warehouse.employee.EmployeeEntity
 import easy.warehouse.employee.EmployeeVm
 import easy.warehouse.product.ProductVm
 import easy.warehouse.report.ReportVm
+import easy.warehouse.ui.AutoAnimatedVisibility
 import easy.warehouse.ui.ChangesSummary
 import easy.warehouse.ui.DestinationSelection
 import easy.warehouse.ui.ProductFilterChips
@@ -136,44 +137,48 @@ fun WarehouseScreen(onLoginClick: () -> Unit) {
                     }
 
                     items(products) { product ->
-                        ProductItem(product, productVm)
+                        AutoAnimatedVisibility{
+                            ProductItem(product, productVm)
+                        }
                     }
                 }
             }
 
             if (pendingChanges.isNotEmpty()) {
-                ChangesSummary(
-                    pendingChanges = pendingChanges,
-                    onSave = {
-                        selectedEmployee?.let { employee ->
-                            productVm.saveChanges()
-                            pendingChanges.values.forEach { change ->
-                                reportVm.createReport(
-                                    productId = change.productId,
-                                    employeeId = employee.id,
-                                    vehicleId = selectedVehicle?.id,
-                                    deltaProduct = change.delta
-                                )
+                AutoAnimatedVisibility {
+                    ChangesSummary(
+                        pendingChanges = pendingChanges,
+                        onSave = {
+                            selectedEmployee?.let { employee ->
+                                productVm.saveChanges()
+                                pendingChanges.values.forEach { change ->
+                                    reportVm.createReport(
+                                        productId = change.productId,
+                                        employeeId = employee.id,
+                                        vehicleId = selectedVehicle?.id,
+                                        deltaProduct = change.delta
+                                    )
+                                }
+                                selectedVehicle = null
+                                selectedEmployee = null
+                                productVm.updateSearch("")
+                                coroutineScope.launch {
+                                    snackbarHostState.showSnackbar("Magazzino aggiornato con successo")
+                                }
+                            } ?: {
+                                coroutineScope.launch {
+                                    snackbarHostState.showSnackbar("Seleziona utente prima di salvare")
+                                }
                             }
-                            selectedVehicle = null
-                            selectedEmployee = null
-                            productVm.updateSearch("")
-                            coroutineScope.launch {
-                                snackbarHostState.showSnackbar("Magazzino aggiornato con successo")
-                            }
-                        } ?: {
-                            coroutineScope.launch {
-                                snackbarHostState.showSnackbar("Seleziona utente prima di salvare")
-                            }
-                        }
-                    },
-                    onClear = { productVm.clearChanges() },
-                    isSaveEnabled = selectedEmployee != null,
-                    isClearEnabled = pendingChanges.isNotEmpty(),
-                    modifier = Modifier
-                        .align(Alignment.BottomEnd)
-                        .padding(16.dp)
-                )
+                        },
+                        onClear = { productVm.clearChanges() },
+                        isSaveEnabled = selectedEmployee != null,
+                        isClearEnabled = pendingChanges.isNotEmpty(),
+                        modifier = Modifier
+                            .align(Alignment.BottomEnd)
+                            .padding(16.dp)
+                    )
+                }
             }
         }
     }
