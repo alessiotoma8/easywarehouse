@@ -82,40 +82,42 @@ fun ReportsScreen(onBackClick: () -> Unit) {
                 )
             }
 
-            AutoAnimatedVisibility {
-                Card(
-                    modifier = Modifier.width(450.dp).align(Alignment.BottomEnd).padding(16.dp),
-                    elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
-                    colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.surfaceContainerHigh
-                    )
-                ) {
-                    Column(
-                        modifier = Modifier.padding(20.dp),
-                        verticalArrangement = Arrangement.spacedBy(8.dp)
+            Row(modifier = Modifier.width(450.dp).align(Alignment.BottomEnd).padding(16.dp),){
+                AutoAnimatedVisibility {
+                    Card(
+                        modifier = Modifier.width(450.dp).padding(16.dp),
+                        elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
+                        colors = CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.surfaceContainerHigh
+                        )
                     ) {
-                        Text("Report Export", style = MaterialTheme.typography.titleLarge)
-                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                            Button(
-                                colors = ButtonDefaults.buttonColors(
-                                    containerColor = MaterialTheme.colorScheme.tertiary,
-                                ),
-                                onClick = {
-                                    openDbReportsFolder()
-                                }
-                            ) {
-                                Text("Apri cartella export")
-                            }
-
-                            Button(
-                                onClick = {
-                                    reportVm.exportReport()
-                                    coroutineScope.launch {
-                                        snackbarHostState.showSnackbar("Esportazione di ${reports.size} report eseguita!")
+                        Column(
+                            modifier = Modifier.padding(20.dp),
+                            verticalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            Text("Report Export", style = MaterialTheme.typography.titleLarge)
+                            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                Button(
+                                    colors = ButtonDefaults.buttonColors(
+                                        containerColor = MaterialTheme.colorScheme.tertiary,
+                                    ),
+                                    onClick = {
+                                        openDbReportsFolder()
                                     }
+                                ) {
+                                    Text("Apri cartella export")
                                 }
-                            ) {
-                                Text("Esporta ${reports.size} Report")
+
+                                Button(
+                                    onClick = {
+                                        reportVm.exportReport()
+                                        coroutineScope.launch {
+                                            snackbarHostState.showSnackbar("Esportazione di ${reports.size} report eseguita!")
+                                        }
+                                    }
+                                ) {
+                                    Text("Esporta ${reports.size} Report")
+                                }
                             }
                         }
                     }

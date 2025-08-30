@@ -1,9 +1,11 @@
 package easy.warehouse
 
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.WindowPlacement
 import androidx.compose.ui.window.application
 import androidx.compose.ui.window.rememberWindowState
+import org.jetbrains.compose.resources.painterResource
 
 
 fun main() = application {
@@ -23,3 +25,4 @@ fun main() = application {
         App()
     }
 }
+
