@@ -1,15 +1,45 @@
 package easy.warehouse.ui.screen
 
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AddCircle
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material3.*
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.runtime.*
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Tab
+import androidx.compose.material3.TabRow
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -24,6 +54,7 @@ import easy.warehouse.product.ProductVm
 import easy.warehouse.product.Utility
 import easy.warehouse.ui.GenericExposedDropdownMenu
 import easy.warehouse.ui.ScreenContent
+import easy.warehouse.ui.SearchBar
 import easy.warehouse.ui.WAppBar
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.launch
@@ -136,7 +167,10 @@ fun AdminScreen(onLogoutClick: () -> Unit = {}, onReportClick: () -> Unit = {}) 
                                     contentDescription = "Aggiungi",
                                     tint = Green2
                                 )
-                                Text("Aggiungi un nuovo elemento", style = MaterialTheme.typography.titleMedium)
+                                Text(
+                                    "Aggiungi un nuovo elemento",
+                                    style = MaterialTheme.typography.titleMedium
+                                )
                             }
                             when (selectedTabIndex) {
                                 0 -> UserAddSection(onEditComplete = showSnackbar)
@@ -168,7 +202,10 @@ fun AdminScreen(onLogoutClick: () -> Unit = {}, onReportClick: () -> Unit = {}) 
                                     contentDescription = "Rimuovi/Modifica",
                                     tint = Blue2
                                 )
-                                Text("Rimuovi o Modifica un elemento", style = MaterialTheme.typography.titleMedium)
+                                Text(
+                                    "Rimuovi o Modifica un elemento",
+                                    style = MaterialTheme.typography.titleMedium
+                                )
                             }
                             when (selectedTabIndex) {
                                 0 -> UserRemoveSection(
@@ -179,6 +216,7 @@ fun AdminScreen(onLogoutClick: () -> Unit = {}, onReportClick: () -> Unit = {}) 
                                         showSnackbar(it)
                                     }
                                 )
+
                                 1 -> VehicleRemoveSection(
                                     selectedVehicleForEdit,
                                     onVehicleEdit = { selectedVehicleForEdit = it },
@@ -187,6 +225,7 @@ fun AdminScreen(onLogoutClick: () -> Unit = {}, onReportClick: () -> Unit = {}) 
                                         showSnackbar(it)
                                     }
                                 )
+
                                 2 -> ProductRemoveSection(
                                     selectedProductForEdit,
                                     onProductEdit = { selectedProductForEdit = it },
@@ -228,7 +267,7 @@ fun BaseAddTab(
                 enabled = field.isEnabled
             )
         }
-    }
+    },
 ) {
     Column(
         modifier = Modifier.fillMaxWidth(),
@@ -342,6 +381,8 @@ fun UserRemoveSection(
     onEditComplete: (String) -> Unit,
 ) {
     val employeeVm = viewModel<EmployeeVm>()
+    var searchQuery by remember { mutableStateOf("") }
+
 
     BaseRemoveTab(
         title = "Seleziona un Utente",
@@ -353,8 +394,13 @@ fun UserRemoveSection(
             UserAddSection(employee, onComplete)
         },
         listContent = { items, onEdit, onComplete ->
+            SearchBar(query = searchQuery, onQueryChange = { searchQuery = it })
+            val filtered = items.filter {
+                it.name.contains(searchQuery, ignoreCase = true) ||
+                        it.surname.contains(searchQuery, ignoreCase = true)
+            }
             UserCardList(
-                users = items,
+                users = filtered,
                 onEdit = onEdit,
                 onDelete = {
                     employeeVm.removeEmployee(it.id)
@@ -402,7 +448,11 @@ fun UserCardList(
                             Icon(Icons.Default.Edit, contentDescription = "Modifica")
                         }
                         IconButton(onClick = { onDelete(user) }) {
-                            Icon(Icons.Default.Delete, contentDescription = "Elimina", tint = MaterialTheme.colorScheme.error)
+                            Icon(
+                                Icons.Default.Delete,
+                                contentDescription = "Elimina",
+                                tint = MaterialTheme.colorScheme.error
+                            )
                         }
                     }
                 }
@@ -458,6 +508,7 @@ fun VehicleRemoveSection(
     onEditComplete: (String) -> Unit,
 ) {
     val vehicleVm = viewModel<VehicleVm>()
+    var searchQuery by remember { mutableStateOf("") }
 
     BaseRemoveTab(
         title = "Seleziona un Veicolo",
@@ -469,8 +520,13 @@ fun VehicleRemoveSection(
             VehicleAddSection(vehicle, onComplete)
         },
         listContent = { items, onEdit, onComplete ->
+            SearchBar(query = searchQuery, onQueryChange = { searchQuery = it })
+            val filtered = items.filter {
+                it.vehicleName.contains(searchQuery, ignoreCase = true) ||
+                        it.vehiclePlate.contains(searchQuery, ignoreCase = true)
+            }
             VehicleCardList(
-                vehicles = items,
+                vehicles = filtered,
                 onEdit = onEdit,
                 onDelete = {
                     vehicleVm.removeVehicle(it.id)
@@ -522,7 +578,11 @@ fun VehicleCardList(
                             Icon(Icons.Default.Edit, contentDescription = "Modifica")
                         }
                         IconButton(onClick = { onDelete(vehicle) }) {
-                            Icon(Icons.Default.Delete, contentDescription = "Elimina", tint = MaterialTheme.colorScheme.error)
+                            Icon(
+                                Icons.Default.Delete,
+                                contentDescription = "Elimina",
+                                tint = MaterialTheme.colorScheme.error
+                            )
                         }
                     }
                 }
@@ -622,6 +682,7 @@ fun ProductRemoveSection(
     onEditComplete: (String) -> Unit,
 ) {
     val productVm = viewModel<ProductVm>()
+    var searchQuery by remember { mutableStateOf("") }
 
     BaseRemoveTab(
         title = "Seleziona un Prodotto",
@@ -633,8 +694,13 @@ fun ProductRemoveSection(
             ProductAddSection(product, onComplete)
         },
         listContent = { items, onEdit, onComplete ->
+            SearchBar(query = searchQuery, onQueryChange = { searchQuery = it })
+            val filtered = items.filter {
+                it.title.contains(searchQuery, ignoreCase = true) ||
+                        (it.content?.contains(searchQuery, ignoreCase = true) ?: false)
+            }
             ProductCardList(
-                products = items,
+                products = filtered,
                 onEdit = onEdit,
                 onDelete = {
                     productVm.removeProduct(it.id)
@@ -698,7 +764,11 @@ fun ProductCardList(
                             Icon(Icons.Default.Edit, contentDescription = "Modifica")
                         }
                         IconButton(onClick = { onDelete(product) }) {
-                            Icon(Icons.Default.Delete, contentDescription = "Elimina", tint = MaterialTheme.colorScheme.error)
+                            Icon(
+                                Icons.Default.Delete,
+                                contentDescription = "Elimina",
+                                tint = MaterialTheme.colorScheme.error
+                            )
                         }
                     }
                 }
