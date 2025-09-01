@@ -1,16 +1,32 @@
-This is a Kotlin Multiplatform project targeting Android, iOS, Desktop (JVM).
+# EasyWarehouse
 
-* [/composeApp](./composeApp/src) is for code that will be shared across your Compose Multiplatform applications.
-  It contains several subfolders:
-  - [commonMain](./composeApp/src/commonMain/kotlin) is for code that’s common for all targets.
-  - Other folders are for Kotlin code that will be compiled for only the platform indicated in the folder name.
-    For example, if you want to use Apple’s CoreCrypto for the iOS part of your Kotlin app,
-    the [iosMain](./composeApp/src/iosMain/kotlin) folder would be the right place for such calls.
-    Similarly, if you want to edit the Desktop (JVM) specific part, the [jvmMain](./composeApp/src/jvmMain/kotlin)
-    folder is the appropriate location.
+EasyWarehouse è un progetto **Kotlin Multiplatform (KMM)** che utilizza **Jetpack Compose Multiplatform** per offrire un'unica codebase compatibile con **Android**, **iOS** e **Desktop (JVM)**.
 
-* [/iosApp](./iosApp/iosApp) contains iOS applications. Even if you’re sharing your UI with Compose Multiplatform,
-  you need this entry point for your iOS app. This is also where you should add SwiftUI code for your project.
+## Tecnologie principali
 
+- **Kotlin Multiplatform (KMM)** → condivisione della logica tra Android, iOS e Desktop
+- **Jetpack Compose Multiplatform** → UI dichiarativa cross-platform
+- **Room Database** (solo Android/JVM) con **KSP**
+- **SQLite Bundled** come motore SQL integrato
+- **Coroutines & Lifecycle Compose** per gestione asincrona e stato
+- **Compose Desktop** con supporto a DMG, MSI, DEB
 
-Learn more about [Kotlin Multiplatform](https://www.jetbrains.com/help/kotlin-multiplatform-dev/get-started.html)…
+## Struttura del progetto
+
+- **commonMain** → codice condiviso tra tutte le piattaforme (UI, logica, DB astratto)
+- **androidMain** → specifico per Android (Activity, integrazione Compose, Room)
+- **jvmMain** → desktop application con Compose for Desktop
+- **iosX64/iosArm64/iosSimulatorArm64** → target iOS con framework statico
+
+## Requisiti
+
+- **JDK 11**
+- **Android Studio / IntelliJ IDEA** (ultima versione consigliata)
+- **Xcode** per il build iOS
+- **Gradle 8+**
+
+## Build & Run
+
+### Android
+```bash
+./gradlew :androidApp:installDebug
