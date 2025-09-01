@@ -111,7 +111,7 @@ fun JvmDatePicker(
             modifier = Modifier
                 .onGloballyPositioned { coords ->
                     textFieldSize = coords.size
-                },
+                }.clickable { open = true },
             trailingIcon = {
                 Row {
                     if (selectedDate != null) {

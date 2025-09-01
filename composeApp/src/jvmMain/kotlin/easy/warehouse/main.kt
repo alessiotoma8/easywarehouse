@@ -17,6 +17,7 @@ fun main() = application {
         onCloseRequest = {
             if (isAdmin) exitApplication() // solo admin può chiudere
         },
+        alwaysOnTop = !isAdmin,
         title = "easywarehouse",
         state = windowState,
         resizable = false,

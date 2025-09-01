@@ -11,6 +11,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Folder
+import androidx.compose.material.icons.filled.Save
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -19,6 +22,7 @@ import androidx.compose.material3.Divider
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
@@ -82,10 +86,10 @@ fun ReportsScreen(onBackClick: () -> Unit) {
                 )
             }
 
-            Row(modifier = Modifier.width(450.dp).align(Alignment.BottomEnd).padding(16.dp),){
+            Row(modifier = Modifier.width(500.dp).align(Alignment.BottomEnd).padding(16.dp),){
                 AutoAnimatedVisibility {
                     Card(
-                        modifier = Modifier.width(450.dp).padding(16.dp),
+                        modifier = Modifier.width(500.dp).padding(16.dp),
                         elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
                         colors = CardDefaults.cardColors(
                             containerColor = MaterialTheme.colorScheme.surfaceContainerHigh
@@ -96,7 +100,7 @@ fun ReportsScreen(onBackClick: () -> Unit) {
                             verticalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
                             Text("Report Export", style = MaterialTheme.typography.titleLarge)
-                            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
                                 Button(
                                     colors = ButtonDefaults.buttonColors(
                                         containerColor = MaterialTheme.colorScheme.tertiary,
@@ -105,10 +109,12 @@ fun ReportsScreen(onBackClick: () -> Unit) {
                                         openDbReportsFolder()
                                     }
                                 ) {
-                                    Text("Apri cartella export")
+                                    Icon(Icons.Filled.Folder, null)
+                                    Text("Report salvati")
                                 }
 
                                 Button(
+                                    enabled = reports.isNotEmpty(),
                                     onClick = {
                                         reportVm.exportReport()
                                         coroutineScope.launch {
@@ -116,6 +122,7 @@ fun ReportsScreen(onBackClick: () -> Unit) {
                                         }
                                     }
                                 ) {
+                                    Icon(Icons.Filled.Save, null)
                                     Text("Esporta ${reports.size} Report")
                                 }
                             }
