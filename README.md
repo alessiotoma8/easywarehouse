@@ -1,32 +1,55 @@
+
 # EasyWarehouse
 
-EasyWarehouse è un progetto **Kotlin Multiplatform (KMM)** che utilizza **Jetpack Compose Multiplatform** per offrire un'unica codebase compatibile con **Android**, **iOS** e **Desktop (JVM)**.
+Un’app multipiattaforma per la gestione del magazzino, sviluppata con **Kotlin Multiplatform (KMM)** e **Jetpack Compose Multiplatform**.  
+Consente ai dipendenti di registrare cosa e quanto hanno prelevato dal magazzino e agli amministratori di consultare report dettagliati ed esportarli in **CSV**.
 
-## Tecnologie principali
+## Screenshot
+<div style="display: flex; justify-content: space-between;">
 
-- **Kotlin Multiplatform (KMM)** → condivisione della logica tra Android, iOS e Desktop
-- **Jetpack Compose Multiplatform** → UI dichiarativa cross-platform
-- **Room Database** (solo Android/JVM) con **KSP**
-- **SQLite Bundled** come motore SQL integrato
-- **Coroutines & Lifecycle Compose** per gestione asincrona e stato
-- **Compose Desktop** con supporto a DMG, MSI, DEB
+  <img src="https://github.com/user-attachments/assets/62b4bb45-4121-404d-98ca-c67a791ddc4d" alt="Dipendente" style="width: 48%;" />
+  <img src="https://github.com/user-attachments/assets/ecc3713e-b350-4b3e-95c3-9da072ff3822" alt="Admin" style="width: 48%;" />
 
-## Struttura del progetto
+</div>
 
-- **commonMain** → codice condiviso tra tutte le piattaforme (UI, logica, DB astratto)
-- **androidMain** → specifico per Android (Activity, integrazione Compose, Room)
-- **jvmMain** → desktop application con Compose for Desktop
-- **iosX64/iosArm64/iosSimulatorArm64** → target iOS con framework statico
+## Built With
 
-## Requisiti
+**[Kotlin Multiplatform (KMM)](https://kotlinlang.org/lp/multiplatform/)** → condivisione della logica tra Android, iOS e Desktop.  
 
-- **JDK 11**
-- **Android Studio / IntelliJ IDEA** (ultima versione consigliata)
-- **Xcode** per il build iOS
-- **Gradle 8+**
+**[Jetpack Compose Multiplatform](https://www.jetbrains.com/lp/compose-multiplatform/)** → interfaccia UI dichiarativa cross-platform.  
 
-## Build & Run
+**[Room Database](https://developer.android.com/jetpack/androidx/releases/room)** (Android/JVM) con **KSP** per persistenza locale.  
 
-### Android
+**[SQLite Bundled](https://github.com/touchlab/SQLiter)** → motore SQL integrato.  
+
+**[Kotlin Coroutines](https://kotlinlang.org/docs/coroutines-overview.html)** → gestione asincrona e flussi di dati.  
+
+**[CSV Export](https://commons.apache.org/proper/commons-csv/)** → per generazione ed esportazione dei report.  
+
+## Funzionalità
+
+- 👷 **Dipendenti** → registrano prelievi dal magazzino (cosa e quantità).  
+- 🗂️ **Amministratori** → consultano report dettagliati dei movimenti.  
+- 📊 **Esportazione CSV** → salvataggio e condivisione dei report.  
+- 📱 **Cross-platform** → disponibile su Android, iOS e Desktop.  
+
+## Installation
+
+Per eseguire il progetto in locale:
+
 ```bash
+git clone https://github.com/alessiotoma8/easy-warehouse.git
+cd easy-warehouse
+./gradlew build
+
+Android
+
 ./gradlew :androidApp:installDebug
+
+iOS
+
+Apri iosApp.xcworkspace in Xcode e avvia l’app su simulatore/dispositivo.
+
+Desktop
+
+./gradlew :desktopApp:run
