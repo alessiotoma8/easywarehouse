@@ -30,8 +30,7 @@ Consente ai dipendenti di registrare cosa e quanto hanno prelevato dal magazzino
 
 - 👷 **Dipendenti** → registrano prelievi dal magazzino (cosa e quantità).  
 - 🗂️ **Amministratori** → consultano report dettagliati dei movimenti.  
-- 📊 **Esportazione CSV** → salvataggio e condivisione dei report.  
-- 📱 **Cross-platform** → disponibile su Android, iOS e Desktop.  
+- 📊 **Esportazione CSV** → salvataggio e condivisione dei report.    
 
 ## Installation
 
@@ -42,14 +41,7 @@ git clone https://github.com/alessiotoma8/easy-warehouse.git
 cd easy-warehouse
 ./gradlew build
 
-Android
 
-./gradlew :androidApp:installDebug
-
-iOS
-
-Apri iosApp.xcworkspace in Xcode e avvia l’app su simulatore/dispositivo.
-
-Desktop
+Desktop jvm
 
 ./gradlew :desktopApp:run
