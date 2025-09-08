@@ -8,8 +8,12 @@ It allows employees to record what and how much they have taken from the warehou
 ## Screenshot
 <div style="display: flex; justify-content: space-between;">
 
-  <img src="https://github.com/user-attachments/assets/62b4bb45-4121-404d-98ca-c67a791ddc4d" alt="Employee" style="width: 48%;" />
-  <img src="https://github.com/user-attachments/assets/ecc3713e-b350-4b3e-95c3-9da072ff3822" alt="Admin" style="width: 48%;" />
+  <img src="https://github.com/user-attachments/assets/e782c94e-5ebf-44cf-8c75-3c5f96f4c144" style="width: 48%;"/>
+  <img src="https://github.com/user-attachments/assets/870a2609-ca8f-4732-b515-5f553a9ee7fb" style="width: 48%;"/>
+  <img src="https://github.com/user-attachments/assets/ada6c44d-7092-465a-b865-e63ce8e03bb0" style="width: 48%;"/>
+  <img src="https://github.com/user-attachments/assets/89ffe8fc-ccc7-44ec-95de-87d7a21c4b51" style="width: 48%;"/>
+
+  
 
 </div>
 
