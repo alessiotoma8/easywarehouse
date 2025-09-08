@@ -11,8 +11,8 @@ data class Account(
 }
 
 object AccountManager {
-    private val username = "robby"
-    private val pwd = "123"
+    private val username = "test"
+    private val pwd = "1"
 
     var isAdmin = false
         private set

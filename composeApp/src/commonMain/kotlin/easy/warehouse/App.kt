@@ -26,11 +26,12 @@ import kotlin.time.ExperimentalTime
 
 @OptIn(ExperimentalTime::class)
 @Composable
-fun App() {
+fun App(
+    isAdmin: Boolean,
+    onAdminChange:(Boolean)-> Unit
+) {
     var showDialog by remember { mutableStateOf(false) }
     var idleTriggered by remember { mutableStateOf(false) }
-
-    var isAdmin by remember { mutableStateOf(false) }
 
     AppTheme {
         Column(
@@ -44,7 +45,7 @@ fun App() {
 
             fun logout() {
                 showLoginScreen = false
-                isAdmin = false
+                onAdminChange(false)
                 showReport = false
             }
 
@@ -83,7 +84,9 @@ fun App() {
                     if (!isAdmin) {
                         LoginScreen(
                             authAction = { us, pwd ->
-                                isAdmin = AccountManager.login(us, pwd)
+                                val logfin =  AccountManager.login(us, pwd)
+                                onAdminChange(logfin)
+                                logfin
                             },
                             onBack = {
                                 showLoginScreen = false

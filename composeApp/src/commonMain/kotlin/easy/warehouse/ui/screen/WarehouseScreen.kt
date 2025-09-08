@@ -72,8 +72,8 @@ fun WarehouseScreen(onLoginClick: () -> Unit) {
     Scaffold(
         topBar = {
             Row {
-                WAppBar("Magazzino"){
-                    Button(onClick = onLoginClick){
+                WAppBar("Magazzino") {
+                    Button(onClick = onLoginClick) {
                         Text("Accedi")
                     }
                 }
@@ -137,7 +137,7 @@ fun WarehouseScreen(onLoginClick: () -> Unit) {
                     }
 
                     items(products) { product ->
-                        AutoAnimatedVisibility{
+                        AutoAnimatedVisibility {
                             ProductItem(product, productVm)
                         }
                     }
@@ -145,39 +145,43 @@ fun WarehouseScreen(onLoginClick: () -> Unit) {
             }
 
             if (pendingChanges.isNotEmpty()) {
-                AutoAnimatedVisibility {
-                    ChangesSummary(
-                        pendingChanges = pendingChanges,
-                        onSave = {
-                            selectedEmployee?.let { employee ->
-                                productVm.saveChanges()
-                                pendingChanges.values.forEach { change ->
-                                    reportVm.createReport(
-                                        productId = change.productId,
-                                        employeeId = employee.id,
-                                        vehicleId = selectedVehicle?.id,
-                                        deltaProduct = change.delta
-                                    )
+                Row(
+                    modifier = Modifier
+                        .align(Alignment.BottomEnd)
+                ) {
+                    AutoAnimatedVisibility{
+                        ChangesSummary(
+                            pendingChanges = pendingChanges,
+                            onSave = {
+                                selectedEmployee?.let { employee ->
+                                    productVm.saveChanges()
+                                    pendingChanges.values.forEach { change ->
+                                        reportVm.createReport(
+                                            productId = change.productId,
+                                            employeeId = employee.id,
+                                            vehicleId = selectedVehicle?.id,
+                                            deltaProduct = change.delta
+                                        )
+                                    }
+                                    selectedVehicle = null
+                                    selectedEmployee = null
+                                    productVm.updateSearch("")
+                                    coroutineScope.launch {
+                                        snackbarHostState.showSnackbar("Magazzino aggiornato con successo")
+                                    }
+                                } ?: {
+                                    coroutineScope.launch {
+                                        snackbarHostState.showSnackbar("Seleziona utente prima di salvare")
+                                    }
                                 }
-                                selectedVehicle = null
-                                selectedEmployee = null
-                                productVm.updateSearch("")
-                                coroutineScope.launch {
-                                    snackbarHostState.showSnackbar("Magazzino aggiornato con successo")
-                                }
-                            } ?: {
-                                coroutineScope.launch {
-                                    snackbarHostState.showSnackbar("Seleziona utente prima di salvare")
-                                }
-                            }
-                        },
-                        onClear = { productVm.clearChanges() },
-                        isSaveEnabled = selectedEmployee != null,
-                        isClearEnabled = pendingChanges.isNotEmpty(),
-                        modifier = Modifier
-                            .align(Alignment.BottomEnd)
-                            .padding(16.dp)
-                    )
+                            },
+                            onClear = { productVm.clearChanges() },
+                            isSaveEnabled = selectedEmployee != null,
+                            isClearEnabled = pendingChanges.isNotEmpty(),
+                            modifier = Modifier
+                                .padding(16.dp)
+                        )
+                    }
                 }
             }
         }
